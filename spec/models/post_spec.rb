@@ -257,4 +257,14 @@ RSpec.describe Post, type: :model do
       expect(post.reload.appeal_requested).to be false
     end
   end
+
+  describe '#screen_content_async' do
+    it 'skips content screening in production' do
+      allow(Rails.env).to receive(:production?).and_return(true)
+
+      expect(ScreenPostContentJob).not_to receive(:perform_later)
+
+      create(:post)
+    end
+  end
 end
