@@ -6,7 +6,7 @@
 - Mingliang Yu (`my2899`)
 - Yujia Zhai (`yz5133`)
 
-## Project Pitch
+## Project Pitch 
 - Video: https://youtu.be/9S1olW0Fe4o
 - Proposal: see `/docs/proposal.txt`
 
