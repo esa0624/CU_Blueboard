@@ -159,7 +159,7 @@ Running the test suites will generate a detailed coverage report in `coverage/in
 
 ## Deployment
 - Heroku: https://cu-blueboard-27a6a02ee825.herokuapp.com/
-- Source code: https://github.com/zhstella/CU_Blueboard
+- Source code: https://github.com/esa0624/CU_Blueboard
 
 ### Heroku Deployment Checklist
 After deploying to Heroku, run these commands to ensure the app works correctly:
