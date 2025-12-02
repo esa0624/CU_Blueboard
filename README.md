@@ -207,7 +207,7 @@ cp example.env .env
 | `GOOGLE_OAUTH2_CLIENT_ID` | **Yes** | Google OAuth client ID from [Google Cloud Console](https://console.cloud.google.com/apis/credentials) |
 | `GOOGLE_OAUTH2_CLIENT_SECRET` | **Yes** | Google OAuth client secret |
 | `OPENAI_API_KEY` | No | OpenAI API key for AI content moderation (FREE tier available) |
-| `MODERATOR_EMAILS` | No | Comma-separated emails that get moderator role on login |
+| `MODERATOR_EMAILS` | No | Comma-separated emails that get moderator role on login (Course Staff + Team 8 included in example.env) |
 | `ALLOWED_LOGIN_EMAILS` | No | Comma-separated emails that bypass @columbia.edu/@barnard.edu domain restriction |
 
 > **Note:** The `example.env` includes pre-configured TA and Team 8 emails for grading/testing. Replace with your own emails as needed.
@@ -300,15 +300,16 @@ Add moderator emails to the `MODERATOR_EMAILS` environment variable (comma-separ
 
 **Local Development:**
 ```bash
-# .env file (copy from example.env which includes all course staff)
+# .env file (copy from example.env which includes Course Staff + Team 8 members)
 cp example.env .env
-# Or manually set:
-MODERATOR_EMAILS=ao2686@columbia.edu,hm3075@columbia.edu,lae2146@columbia.edu,xz2995@columbia.edu,jm5676@columbia.edu,jy2324@columbia.edu
 ```
+
+> **Note:** The `example.env` file already includes all Course Staff (TAs + Instructor) and Team 8 members as moderators for grading and testing purposes.
 
 **Production (Heroku):**
 ```bash
-heroku config:set MODERATOR_EMAILS="ao2686@columbia.edu,hm3075@columbia.edu,lae2146@columbia.edu,xz2995@columbia.edu,jm5676@columbia.edu,jy2324@columbia.edu"
+# Course Staff + Team 8 members (pre-configured in example.env)
+heroku config:set MODERATOR_EMAILS="ao2686@columbia.edu,hm3075@columbia.edu,lae2146@columbia.edu,xz2995@columbia.edu,jm5676@columbia.edu,jy2324@columbia.edu,cc5240@columbia.edu,sh4546@columbia.edu,my2899@columbia.edu,yz5133@columbia.edu"
 ```
 
 #### How It Works
