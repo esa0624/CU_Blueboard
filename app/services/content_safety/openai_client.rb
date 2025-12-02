@@ -45,9 +45,11 @@ module ContentSafety
     end
 
     def execute_request(uri, request)
-      Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
-        http.request(request)
-      end
+      http = Net::HTTP.new(uri.hostname, uri.port)
+      http.use_ssl = true
+      # Relax SSL verification in development (macOS certificate issues)
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE if Rails.env.development? || Rails.env.test?
+      http.request(request)
     end
 
     def parse_response(response)
