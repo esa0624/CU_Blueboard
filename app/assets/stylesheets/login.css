@@ -309,10 +309,11 @@ body.login-page::before {
 
 .agreement-text {
   margin-top: 16px;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.75);
   text-align: center;
   line-height: 1.5;
+  white-space: nowrap;
 }
 
 .agreement-text a {
