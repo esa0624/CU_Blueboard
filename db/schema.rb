@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_01_161456) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_01_134806) do
   create_table "answer_comments", force: :cascade do |t|
     t.integer "answer_id", null: false
     t.text "body", null: false

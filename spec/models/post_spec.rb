@@ -259,10 +259,8 @@ RSpec.describe Post, type: :model do
   end
 
   describe '#screen_content_async' do
-    it 'skips content screening in production' do
-      allow(Rails.env).to receive(:production?).and_return(true)
-
-      expect(ScreenPostContentJob).not_to receive(:perform_later)
+    it 'enqueues content screening job in all environments' do
+      expect(ScreenPostContentJob).to receive(:perform_later).with(kind_of(Integer))
 
       create(:post)
     end

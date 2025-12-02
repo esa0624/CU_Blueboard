@@ -140,7 +140,6 @@ class Post < ApplicationRecord
   private
 
   def screen_content_async
-    return if Rails.env.production?
     # Enqueue background job to screen content with OpenAI Moderation API
     ScreenPostContentJob.perform_later(id)
   end
