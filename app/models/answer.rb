@@ -5,6 +5,7 @@ class Answer < ApplicationRecord
   has_many :audit_logs, as: :auditable, dependent: :destroy
   has_many :answer_comments, dependent: :destroy
   has_many :answer_revisions, dependent: :destroy
+  has_many :answer_likes, dependent: :destroy
   belongs_to :redacted_by, class_name: 'User', optional: true
 
   validates :body, presence: true
@@ -25,6 +26,24 @@ class Answer < ApplicationRecord
     return if previous_body == body
 
     answer_revisions.create!(user: editor, body: previous_body)
+  end
+
+  # Voting helper methods
+  def upvotes_count
+    answer_likes.upvotes.count
+  end
+
+  def downvotes_count
+    answer_likes.downvotes.count
+  end
+
+  def net_score
+    upvotes_count - downvotes_count
+  end
+
+  def find_vote_by(user)
+    return nil unless user
+    answer_likes.find_by(user_id: user.id)
   end
 
   private

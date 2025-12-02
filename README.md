@@ -131,6 +131,9 @@ CU Blueboard is an **anonymous Q&A platform** exclusively for verified Columbia/
 - View Bookmarked Posts: Access all bookmarked posts via the "Bookmarks" link in the navigation header (positioned before "My Threads"), with full filter support (search, topic, tags, status, school, course, timeframe).
 - Visual Feedback: Gold filled star (★) indicates bookmarked posts, empty star (☆) for unbookmarked. Hover effects show yellow highlight for bookmarking and red highlight for removing bookmarks.
 - Data Model: Bookmark model with user-post associations and uniqueness constraint preventing duplicate bookmarks.
+- Answer/Comment Voting System: Upvote/downvote answers and reply comments with Stack Overflow-style voting UI. Left-side compact vote buttons for answers, inline micro buttons for comments. Vote toggles work like post votes.
+- Reply Comment Indentation: AnswerComments are visually indented with a left border to show comment hierarchy clearly.
+- Enhanced Sample Data: 25 realistic posts, 60+ answers, 20+ reply comments with authentic college student language (slang, abbreviations) covering academics, housing, careers, wellness, and campus life topics.
 
 ## Test Suites
 ```bash
@@ -142,12 +145,16 @@ bundle exec cucumber
 ```
 
 **RSpec coverage**
-- Line Coverage: 100% (762 / 762) 300 examples, 0 failures
+- Line Coverage: 100% (860 / 860) 350 examples, 0 failures
 - `spec/models/post_spec.rb`: validations, taxonomy limits, search helper, expiration logic, and thread-identity callback.
 - `spec/models/answer_spec.rb`: body validations, per-thread identities, reveal logging, and acceptance cleanup.
 - `spec/models/answer_comment_spec.rb`: comment validation + thread delegation to preserve pseudonyms.
 - `spec/models/post_revision_spec.rb` / `spec/models/answer_revision_spec.rb`: ensure revision history entries stay valid.
 - `spec/models/like_spec.rb`: uniqueness constraint plus helper methods for liked?/find_like_by.
+- `spec/models/answer_like_spec.rb`: answer voting model validations, scopes, and helper methods.
+- `spec/models/answer_comment_like_spec.rb`: comment voting model validations, scopes, and helper methods.
+- `spec/requests/answer_likes_spec.rb`: answer upvote/downvote endpoints with toggle behavior.
+- `spec/requests/answer_comment_likes_spec.rb`: comment upvote/downvote endpoints with toggle behavior.
 - `spec/models/user_spec.rb`: anonymous handle helper and OmniAuth linkage for happy/duplicate/new flows.
 - `spec/requests/posts_spec.rb`: global feed filters, create/destroy, reveal identity, expiring threads, and the `my_threads` route.
 - `spec/requests/answers_spec.rb`: CRUD, validation, authorization, identity reveals, edit/revision flows, and accept/reopen flows.
@@ -161,8 +168,8 @@ bundle exec cucumber
 - `spec/requests/bookmarks_spec.rb`: bookmark/unbookmark endpoints, bookmarked posts listing, and authentication guards.
 
 **Cucumber scenarios**
-- Latest run: 29 scenarios / 203 steps passing in ~1.1s via `bundle exec cucumber`.
-- Coverage snapshot: line 100% (762/762), branch 100% (227/227) once merged with the RSpec suite. Run `bundle exec cucumber` followed by `open coverage/index.html` to inspect details.
+- Latest run: 29 scenarios / 202 steps passing in ~1.1s via `bundle exec cucumber`.
+- Coverage snapshot: line 100% (860/860), branch 100% (247/247) once merged with the RSpec suite. Run `bundle exec cucumber` followed by `open coverage/index.html` to inspect details.
 - Reports publish to https://reports.cucumber.io by default (`CUCUMBER_PUBLISH_ENABLED=true`). Set `CUCUMBER_PUBLISH_QUIET=true` or pass `--publish-quiet` locally to silence the banner.
 - `features/posts/browse_posts.feature`: authenticated browsing, advanced filters, My Threads navigation, blank-search alerts, and guest redirect to the SSO screen.
 - `features/posts/create_post.feature`: signup + creation flow, validation failures, expiring threads, and draft preview UX.
@@ -426,6 +433,8 @@ CU_Blueboard/
 │   │   ├── answers_controller.rb                 # Answer CRUD + revisions + accept
 │   │   ├── answer_comments_controller.rb         # Answer comment create/destroy
 │   │   ├── likes_controller.rb                   # Like toggle endpoints
+│   │   ├── answer_likes_controller.rb            # Answer voting (upvote/downvote)
+│   │   ├── answer_comment_likes_controller.rb    # Answer comment voting
 │   │   ├── moderation/posts_controller.rb        # Moderation dashboard & redaction
 │   │   ├── moderation/answers_controller.rb      # Answer redaction actions
 │   │   └── users/omniauth_callbacks_controller.rb # Google SSO callback handler
@@ -448,6 +457,8 @@ CU_Blueboard/
 │   │   ├── answer_comment.rb                     # Inline comments on answers
 │   │   ├── bookmark.rb                           # Bookmark model for user-post associations
 │   │   ├── like.rb / thread_identity.rb / audit_log.rb
+│   │   ├── answer_like.rb                        # Answer voting model
+│   │   ├── answer_comment_like.rb                # Answer comment voting model
 │   │   ├── tag.rb / topic.rb / post_tag.rb       # Taxonomy models
 │   │   └── user.rb                               # Devise user with anonymous handle + OmniAuth + bookmarks
 │   ├── views/posts/                              # Index/show/new/edit templates & shared partials
@@ -488,9 +499,9 @@ CU_Blueboard/
 │   └── support/env.rb                       # Cucumber+DatabaseCleaner/OmniAuth setup
 ├── lib/tasks/cucumber.rake             # Rake tasks for Cucumber profiles
 ├── spec/
-│   ├── factories/{users,posts,answers,likes,answer_comments,post_revisions,answer_revisions,bookmarks}.rb # FactoryBot fixtures
-│   ├── models/{post,answer,like,user,answer_comment,post_revision,answer_revision,bookmark}_spec.rb        # Model specs
-│   ├── requests/{posts,answers,likes,answer_comments,omniauth_callbacks,bookmarks}_spec.rb                  # Request specs
+│   ├── factories/{users,posts,answers,likes,answer_likes,answer_comment_likes,answer_comments,...}.rb  # FactoryBot fixtures
+│   ├── models/{post,answer,like,answer_like,answer_comment_like,user,answer_comment,...}_spec.rb        # Model specs
+│   ├── requests/{posts,answers,likes,answer_likes,answer_comment_likes,answer_comments,...}_spec.rb      # Request specs
 │   ├── requests/moderation/{posts,answers}_spec.rb                                              # Moderation request specs
 │   ├── controllers/moderation/posts_controller_spec.rb                                          # Moderation controller specs
 │   ├── jobs/

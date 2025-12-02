@@ -482,20 +482,55 @@ body {
 }
 .comment-actions {
   margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
 }
-.comment-delete-link {
-  background: none;
-  border: none;
-  padding: 0;
-  margin: 0;
-  color: #D9534F;
-  font-size: 0.875rem;
+
+.comment-actions a,
+.comment-actions button,
+.comment-actions .comment-reveal-button,
+.comment-actions .comment-delete-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 0.8rem;
   font-weight: 500;
+  border-radius: 4px;
   cursor: pointer;
   text-decoration: none;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  color: #374151;
+  transition: all 0.15s ease;
 }
-.comment-delete-link:hover {
-  text-decoration: underline;
+
+.comment-actions a:hover,
+.comment-actions button:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.comment-actions .comment-delete-link {
+  color: #dc2626;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.comment-actions .comment-delete-link:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+}
+
+.comment-actions .identity-badge {
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 4px;
+  border: none;
 }
 
 .tag-picker {
@@ -554,13 +589,207 @@ body {
 /* 10. 回答表单切换                       */
 /* ======================================= */
 [data-post-show-target="answerForm"] {
-  display: none;
-}
-
-[data-post-show-target="answerForm"].visible {
   display: block;
 }
 
+/* Answer comment (reply) styling */
+.answer-comment {
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: #fafbfc;
+  border-radius: 6px;
+  border-left: 3px solid #e5e7eb;
+}
+
+.answer-comment-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.answer-comment-body {
+  margin: 0 0 8px 0;
+  font-size: 0.9rem;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.answer-comment .comment-actions {
+  margin-top: 8px;
+}
+
+/* Reply button for answer comments */
+.answer-comment-toggle {
+  margin-top: 8px;
+}
+
+.btn-comment-toggle {
+  font-size: 0.85rem;
+  color: var(--primary-600, #2563eb);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn-comment-toggle:hover {
+  text-decoration: underline;
+}
+
+.answer-comment-form {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+/* ======================================= */
+/* Answer/Comment Voting Styles            */
+/* ======================================= */
+
+/* Answer card with vote layout (Stack Overflow style) */
+.answer-card-with-vote {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.answer-vote-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 40px;
+  padding-top: 4px;
+}
+
+.answer-content-section {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Compact vote buttons for answers (28x28px) */
+.btn-vote-compact {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #dee2e6;
+  background-color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.btn-vote-compact:hover {
+  background-color: #f8f9fa;
+}
+
+.btn-vote-compact.btn-upvote:hover,
+.btn-vote-compact.btn-upvote.active {
+  border-color: #28a745;
+  background-color: #d4edda;
+}
+
+.btn-vote-compact.btn-upvote.active .vote-arrow-compact {
+  color: #28a745;
+}
+
+.btn-vote-compact.btn-downvote:hover,
+.btn-vote-compact.btn-downvote.active {
+  border-color: #dc3545;
+  background-color: #f8d7da;
+}
+
+.btn-vote-compact.btn-downvote.active .vote-arrow-compact {
+  color: #dc3545;
+}
+
+.vote-arrow-compact {
+  font-size: 14px;
+  color: #6c757d;
+  line-height: 1;
+}
+
+.vote-score-compact {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #212529;
+  text-align: center;
+  min-width: 24px;
+}
+
+.vote-score-compact-guest {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #6c757d;
+  text-align: center;
+}
+
+/* Micro vote buttons for answer comments (20x20px) */
+.vote-controls-micro {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.btn-vote-micro {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dee2e6;
+  background-color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  font-size: 10px;
+  color: #6c757d;
+}
+
+.btn-vote-micro:hover {
+  background-color: #f8f9fa;
+}
+
+.btn-vote-micro.btn-upvote:hover,
+.btn-vote-micro.btn-upvote.active {
+  border-color: #28a745;
+  background-color: #d4edda;
+  color: #28a745;
+}
+
+.btn-vote-micro.btn-downvote:hover,
+.btn-vote-micro.btn-downvote.active {
+  border-color: #dc3545;
+  background-color: #f8d7da;
+  color: #dc3545;
+}
+
+.vote-score-micro {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #495057;
+  min-width: 16px;
+  text-align: center;
+}
+
+.vote-score-micro-guest {
+  font-size: 0.75rem;
+  color: #6c757d;
+  margin-left: auto;
+}
+
+/* Answer comments indentation (대댓글 들여쓰기) */
+.answer-comments {
+  margin-left: 48px;
+  margin-top: 12px;
+  padding-left: 16px;
+  border-left: 3px solid #e5e7eb;
+}
 
 /* ======================================= */
 /* 11. 主页特定样式 (新添加)             */

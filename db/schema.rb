@@ -10,7 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_01_134806) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_02_032806) do
+  create_table "answer_comment_likes", force: :cascade do |t|
+    t.integer "answer_comment_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.integer "vote_type", default: 1, null: false
+    t.index ["answer_comment_id"], name: "index_answer_comment_likes_on_answer_comment_id"
+    t.index ["user_id", "answer_comment_id"], name: "index_answer_comment_likes_on_user_id_and_answer_comment_id", unique: true
+    t.index ["user_id"], name: "index_answer_comment_likes_on_user_id"
+  end
+
   create_table "answer_comments", force: :cascade do |t|
     t.integer "answer_id", null: false
     t.text "body", null: false
@@ -19,6 +30,17 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_134806) do
     t.integer "user_id", null: false
     t.index ["answer_id"], name: "index_answer_comments_on_answer_id"
     t.index ["user_id"], name: "index_answer_comments_on_user_id"
+  end
+
+  create_table "answer_likes", force: :cascade do |t|
+    t.integer "answer_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.integer "vote_type", default: 1, null: false
+    t.index ["answer_id"], name: "index_answer_likes_on_answer_id"
+    t.index ["user_id", "answer_id"], name: "index_answer_likes_on_user_id_and_answer_id", unique: true
+    t.index ["user_id"], name: "index_answer_likes_on_user_id"
   end
 
   create_table "answer_revisions", force: :cascade do |t|
@@ -189,8 +211,12 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_134806) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "answer_comment_likes", "answer_comments"
+  add_foreign_key "answer_comment_likes", "users"
   add_foreign_key "answer_comments", "answers"
   add_foreign_key "answer_comments", "users"
+  add_foreign_key "answer_likes", "answers"
+  add_foreign_key "answer_likes", "users"
   add_foreign_key "answer_revisions", "answers"
   add_foreign_key "answer_revisions", "users"
   add_foreign_key "answers", "posts"

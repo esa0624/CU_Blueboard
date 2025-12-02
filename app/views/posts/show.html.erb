@@ -302,8 +302,32 @@
     <% @answers.each do |answer| %>
       <% next unless answer.persisted? %>
       <% accepted = (@post.accepted_answer_id == answer.id) %>
-      <div class="comment-card <%= 'accepted-answer' if accepted %>">
+      <div class="comment-card <%= 'accepted-answer' if accepted %>" id="answer-<%= answer.id %>">
+        <div class="answer-card-with-vote">
+          <%# Left side: Voting section %>
+          <div class="answer-vote-section">
+            <% if user_signed_in? %>
+              <% current_vote = answer.find_vote_by(current_user) %>
+              <%= button_to upvote_post_answer_path(@post, answer),
+                            method: :post,
+                            class: "btn-vote-compact btn-upvote #{'active' if current_vote&.upvote?}",
+                            data: { turbo_action: "replace" } do %>
+                <span class="vote-arrow-compact">▲</span>
+              <% end %>
+              <div class="vote-score-compact"><%= answer.net_score %></div>
+              <%= button_to downvote_post_answer_path(@post, answer),
+                            method: :post,
+                            class: "btn-vote-compact btn-downvote #{'active' if current_vote&.downvote?}",
+                            data: { turbo_action: "replace" } do %>
+                <span class="vote-arrow-compact">▼</span>
+              <% end %>
+            <% else %>
+              <div class="vote-score-compact-guest"><%= answer.net_score %></div>
+            <% end %>
+          </div>
 
+          <%# Right side: Answer content %>
+          <div class="answer-content-section">
         <div class="comment-meta">
           <span class="comment-author">
             <strong><%= display_author(answer.user, context: answer) %></strong>
@@ -399,26 +423,59 @@
                           data: { turbo_confirm: "Redact this answer for policy violations?" } %>
           <% end %>
         </div>
+          </div><%# Close answer-content-section %>
+        </div><%# Close answer-card-with-vote %>
 
         <% if answer.answer_comments.any? %>
           <div class="answer-comments">
             <% answer.answer_comments.order(created_at: :asc).each do |comment| %>
-              <div class="answer-comment">
-                <span class="comment-author"><%= display_author(comment.user, context: comment) %></span>
-                <span class="comment-time"><%= time_ago_in_words(comment.created_at) %> ago</span>
-                <p><%= comment.body %></p>
+              <div class="answer-comment" id="comment-<%= comment.id %>">
+                <div class="answer-comment-header">
+                  <span class="comment-author"><%= display_author(comment.user, context: comment) %></span>
+                  <span class="comment-time"><%= time_ago_in_words(comment.created_at) %> ago</span>
+                  <%# Micro vote buttons for comments %>
+                  <% if user_signed_in? %>
+                    <% comment_vote = comment.find_vote_by(current_user) %>
+                    <div class="vote-controls-micro">
+                      <%= button_to upvote_post_answer_comment_path(@post, answer, comment),
+                                    method: :post,
+                                    class: "btn-vote-micro btn-upvote #{'active' if comment_vote&.upvote?}",
+                                    data: { turbo_action: "replace" } do %>
+                        <span>▲</span>
+                      <% end %>
+                      <span class="vote-score-micro"><%= comment.net_score %></span>
+                      <%= button_to downvote_post_answer_comment_path(@post, answer, comment),
+                                    method: :post,
+                                    class: "btn-vote-micro btn-downvote #{'active' if comment_vote&.downvote?}",
+                                    data: { turbo_action: "replace" } do %>
+                        <span>▼</span>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <span class="vote-score-micro-guest"><%= comment.net_score %></span>
+                  <% end %>
+                </div>
+                <p class="answer-comment-body"><%= comment.body %></p>
                 <% if comment.user == current_user %>
-                  <%= button_to 'Delete', post_answer_comment_path(@post, answer, comment),
-                                method: :delete,
-                                class: 'comment-delete-link',
-                                data: { turbo_confirm: 'Delete this comment?' } %>
+                  <div class="comment-actions">
+                    <%= button_to 'Delete', post_answer_comment_path(@post, answer, comment),
+                                  method: :delete,
+                                  class: 'comment-delete-link',
+                                  data: { turbo_confirm: 'Delete this comment?' } %>
+                  </div>
                 <% end %>
               </div>
             <% end %>
           </div>
         <% end %>
 
-        <div class="answer-comment-form">
+        <div class="answer-comment-toggle">
+          <%= link_to "Reply", "#",
+                      class: "btn-comment-toggle",
+                      data: { action: "click->post-show#toggleCommentForm", answer_id: answer.id } %>
+        </div>
+
+        <div class="answer-comment-form" id="comment-form-<%= answer.id %>" style="display: none;">
           <%= form_with(model: AnswerComment.new, url: post_answer_comments_path(@post, answer)) do |form| %>
             <div class="form-field">
               <%= form.label :body, 'Add a comment', class: 'form-label' %>

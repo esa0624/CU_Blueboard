@@ -55,9 +55,16 @@ Rails.application.routes.draw do
       member do
         patch :reveal_identity
         patch :accept
+        post :upvote, to: 'answer_likes#upvote'
+        post :downvote, to: 'answer_likes#downvote'
       end
 
-      resources :comments, only: [ :create, :destroy ], controller: 'answer_comments'
+      resources :comments, only: [ :create, :destroy ], controller: 'answer_comments' do
+        member do
+          post :upvote, to: 'answer_comment_likes#upvote'
+          post :downvote, to: 'answer_comment_likes#downvote'
+        end
+      end
     end
 
     resources :likes, only: [ :create, :destroy ]

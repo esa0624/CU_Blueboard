@@ -10,6 +10,8 @@ class User < ApplicationRecord
   has_many :posts, dependent: :destroy
   has_many :answers, dependent: :destroy
   has_many :likes, dependent: :destroy
+  has_many :answer_likes, dependent: :destroy
+  has_many :answer_comment_likes, dependent: :destroy
   has_many :bookmarks, dependent: :destroy
   has_many :bookmarked_posts, through: :bookmarks, source: :post
   has_many :thread_identities, dependent: :destroy

@@ -242,10 +242,14 @@ Then('I should not see {string}') do |text|
 end
 
 When('I comment {string} on the most recent answer') do |body|
-  within(all('.answer-comment-form').last) do
-    fill_in 'Add a comment', with: body
-    click_button 'Comment'
-  end
+  # Find the most recent answer
+  answer = Answer.order(created_at: :desc).first
+  post_record = answer.post
+
+  # Submit comment directly via POST (form is JS-toggled, not rack_test compatible)
+  page.driver.submit :post,
+    Rails.application.routes.url_helpers.post_answer_comments_path(post_record, answer),
+    { answer_comment: { body: body } }
 end
 
 When('I edit the post titled {string} to have body {string}') do |title, new_body|

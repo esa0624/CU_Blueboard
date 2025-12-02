@@ -20,4 +20,14 @@ export default class extends Controller {
       this.appealOverlayTarget.style.display = 'none'
     }
   }
+
+  // 4. Toggle comment form for specific answer
+  toggleCommentForm(event) {
+    event.preventDefault()
+    const answerId = event.currentTarget.dataset.answerId
+    const form = document.getElementById(`comment-form-${answerId}`)
+    if (form) {
+      form.style.display = form.style.display === 'none' ? 'block' : 'none'
+    }
+  }
 }
