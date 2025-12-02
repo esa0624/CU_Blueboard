@@ -4,6 +4,8 @@ class Post < ApplicationRecord
   belongs_to :topic
   has_many :answers, dependent: :destroy
   has_many :likes, dependent: :destroy
+  has_many :bookmarks, dependent: :destroy
+  has_many :bookmarked_by_users, through: :bookmarks, source: :user
   has_many :thread_identities, dependent: :destroy
   has_many :audit_logs, as: :auditable, dependent: :destroy
   has_many :post_tags, dependent: :destroy
@@ -95,6 +97,13 @@ class Post < ApplicationRecord
     find_vote_by(user)
   end
 
+  # Bookmark helper methods
+  def bookmarked_by?(user)
+    return false unless user
+
+    bookmarks.exists?(user_id: user.id)
+  end
+
   # Appeal methods
   def request_appeal!
     update!(appeal_requested: true)
@@ -131,6 +140,7 @@ class Post < ApplicationRecord
   private
 
   def screen_content_async
+    return if Rails.env.production?
     # Enqueue background job to screen content with OpenAI Moderation API
     ScreenPostContentJob.perform_later(id)
   end
