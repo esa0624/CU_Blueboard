@@ -498,15 +498,15 @@ RSpec.describe "Posts", type: :request do
     end
 
     context "when a different user is signed in" do
-      it "denies the appeal request" do
+      it "denies the appeal request and restricts access" do
         sign_in create(:user)
 
         post appeal_post_path(post_record)
 
         expect(post_record.reload.appeal_requested).to be(false)
-        expect(response).to redirect_to(post_path(post_record))
+        expect(response).to redirect_to(posts_path)
         follow_redirect!
-        expect(response.body).to include('Unable to submit appeal.')
+        expect(response.body).to include('This post is not available.')
       end
     end
   end

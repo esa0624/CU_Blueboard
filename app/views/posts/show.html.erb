@@ -105,13 +105,21 @@
           <% end %>
           <% if current_user&.can_moderate? %>
             <h5 class="moderator-actions-title">MODERATOR ACTIONS</h5>
-            <%= button_to "Redact Post",
-                          redact_moderation_post_path(@post),
-                          method: :patch,
-                          class: "btn-redact-inline",
-                          form: { data: { turbo_frame: "_top" } },
-                          params: { reason: 'ai_flagged_content', state: 'redacted' },
-                          data: { turbo_confirm: "Redact this AI-flagged post?" } %>
+            <div class="mod-actions-row">
+              <%= button_to "Clear AI Flag",
+                            post_path(@post),
+                            method: :patch,
+                            params: { post: { ai_flagged: false } },
+                            class: "btn-approve-inline",
+                            data: { turbo_confirm: "Clear AI flag and approve this post?" } %>
+              <%= button_to "Redact Post",
+                            redact_moderation_post_path(@post),
+                            method: :patch,
+                            class: "btn-redact-inline",
+                            form: { data: { turbo_frame: "_top" } },
+                            params: { reason: 'ai_flagged_content', state: 'redacted' },
+                            data: { turbo_confirm: "Redact this AI-flagged post?" } %>
+            </div>
           <% end %>
         </div>
       </div>
@@ -162,6 +170,7 @@
   <% else %>
     <%# Normal content display (with blur for AI-flagged author) %>
     <% if @post.ai_flagged? && @post.user == current_user %>
+      <%# Author sees blurred content with "View My Content" button %>
       <div class="ai-flagged-content-wrapper">
         <div class="blurred-content blurred" data-post-show-target="blurredContent">
           <div class="post-body">
@@ -177,92 +186,91 @@
           </button>
         </div>
       </div>
+    <% elsif @post.ai_flagged? && current_user&.can_moderate? %>
+      <%# Moderator sees blurred content with "View the Post" button %>
+      <div class="ai-flagged-content-wrapper">
+        <div class="blurred-content blurred" data-post-show-target="blurredContent">
+          <div class="post-body">
+            <%= @post.body %>
+          </div>
+        </div>
+        <div class="view-content-overlay" data-post-show-target="appealOverlay">
+          <p class="view-content-message">AI-Flagged Content (Moderator View)</p>
+          <button type="button"
+                  class="btn-view-content"
+                  data-action="click->post-show#showContent">
+            View the Post
+          </button>
+        </div>
+      </div>
+    <% elsif @post.ai_flagged? %>
+      <%# Regular users see only a notice - no content %>
+      <div class="alert alert-warning">
+        <p>This content has been flagged for review and is not available.</p>
+      </div>
     <% else %>
+      <%# Normal content %>
       <div class="post-body">
         <%= @post.body %>
       </div>
     <% end %>
   <% end %>
 
-  <%# --- Post actions (centered layout) --- %>
-  <div class="post-actions-container">
-    <%# Bookmark Button - Left %>
-    <div class="bookmark-section-left">
-      <% if user_signed_in? %>
-        <% if @post.bookmarked_by?(current_user) %>
-          <%= button_to unbookmark_post_path(@post), method: :delete, class: "btn-bookmark-large bookmarked", data: { turbo: false } do %>
-            <span class="bookmark-icon-large">&#9733;</span>
-            <span class="bookmark-text">Bookmarked</span>
-          <% end %>
-        <% else %>
-          <%= button_to bookmark_post_path(@post), method: :post, class: "btn-bookmark-large", data: { turbo: false } do %>
-            <span class="bookmark-icon-large">&#9734;</span>
-            <span class="bookmark-text">Bookmark</span>
-          <% end %>
-        <% end %>
-      <% end %>
-    </div>
-
-    <%# Vote System (Upvote/Downvote) - Center %>
-    <div class="vote-section-center">
+  <%# --- Post actions (two-row layout) --- %>
+  <div class="post-actions-two-row">
+    <%# Row 1: Votes + Bookmark %>
+    <div class="post-actions-row-top">
       <% if user_signed_in? %>
         <% current_vote = @post.find_vote_by(current_user) %>
-        <div class="vote-controls">
+        <div class="vote-controls-inline">
           <%= button_to upvote_post_path(@post),
                         method: :post,
-                        class: "btn-vote-large btn-upvote #{'active' if current_vote&.upvote?}" do %>
-            <span class="vote-arrow">▲</span>
+                        class: "btn-vote-inline btn-upvote #{'active' if current_vote&.upvote?}" do %>
+            <span class="vote-arrow-inline">▲</span>
           <% end %>
-          <div class="vote-score">
-            <%= @post.net_score %>
-          </div>
+          <span class="vote-score-inline"><%= @post.net_score %></span>
           <%= button_to downvote_post_path(@post),
                         method: :post,
-                        class: "btn-vote-large btn-downvote #{'active' if current_vote&.downvote?}" do %>
-            <span class="vote-arrow">▼</span>
+                        class: "btn-vote-inline btn-downvote #{'active' if current_vote&.downvote?}" do %>
+            <span class="vote-arrow-inline">▼</span>
           <% end %>
         </div>
+        <% if @post.bookmarked_by?(current_user) %>
+          <%= button_to unbookmark_post_path(@post), method: :delete, class: "btn-bookmark-inline bookmarked", data: { turbo: false } do %>
+            <span class="bookmark-icon">★</span> Bookmarked
+          <% end %>
+        <% else %>
+          <%= button_to bookmark_post_path(@post), method: :post, class: "btn-bookmark-inline", data: { turbo: false } do %>
+            <span class="bookmark-icon">☆</span> Bookmark
+          <% end %>
+        <% end %>
       <% else %>
-        <div class="vote-controls-guest">
-          <div class="vote-score-guest">
-            <%= @post.net_score %>
-          </div>
+        <div class="vote-controls-inline guest">
+          <span class="vote-score-inline"><%= @post.net_score %></span>
           <small>votes</small>
         </div>
       <% end %>
     </div>
 
-    <%# Author Actions %>
-    <% if @post.user == current_user %>
-      <div class="author-actions-group">
-        <%= link_to "Edit Post", edit_post_path(@post), class: "btn-action btn-edit" %>
-        <%= button_to "Delete Post", @post,
+    <%# Row 2: Author + Moderator Actions %>
+    <div class="post-actions-row-bottom">
+      <% if @post.user == current_user %>
+        <%= link_to "Edit", edit_post_path(@post), class: "btn-action-sm btn-edit" %>
+        <%= button_to "Delete", @post,
                     method: :delete,
-                    class: "btn-action btn-delete",
+                    class: "btn-action-sm btn-delete",
                     data: { turbo_confirm: "Are you sure you want to delete this post?" } %>
-      </div>
-    <% end %>
-
-    <%# Moderator Actions - only if NOT AI-flagged (AI-flagged has inline actions) %>
-    <% if current_user&.can_moderate? && !@post.redacted? && !@post.ai_flagged? %>
-      <div class="moderator-panel-actions-bottom">
-        <h4 class="moderator-section-title">Moderator Actions</h4>
+      <% end %>
+      <% if current_user&.can_moderate? && !@post.redacted? && !@post.ai_flagged? %>
         <%= button_to "Redact Post",
                       redact_moderation_post_path(@post),
                       method: :patch,
-                      class: "btn-redact",
+                      class: "btn-redact-elegant",
                       form: { data: { turbo_frame: "_top" } },
                       params: { reason: 'policy_violation', state: 'redacted' },
                       data: { turbo_confirm: "Redact this post for policy violations?" } %>
-      </div>
-    <% end %>
-  </div>
-
-  <%# Answers toggle %>
-  <div class="answers-toggle">
-    <%= link_to "Answers (#{ @answers.count })", "#",
-                class: "btn-answers-toggle",
-                data: { action: "click->post-show#toggleAnswerForm" } %>
+      <% end %>
+    </div>
   </div>
 
   <hr class="section-divider">
@@ -418,7 +426,7 @@
             <%= button_to "Redact Answer",
                           redact_moderation_answer_path(answer),
                           method: :patch,
-                          class: "comment-delete-link",
+                          class: "btn-redact-elegant",
                           params: { reason: 'policy_violation', state: 'redacted' },
                           data: { turbo_confirm: "Redact this answer for policy violations?" } %>
           <% end %>
@@ -990,5 +998,228 @@
     background-color: #c82333;
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+  }
+
+  /* Two-Row Post Actions Layout */
+  .post-actions-two-row {
+    margin: 1.5em 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75em;
+  }
+
+  .post-actions-row-top {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5em;
+    padding: 0.75em 0;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  .post-actions-row-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75em;
+    padding: 0.5em 0;
+    flex-wrap: wrap;
+  }
+
+  /* Inline Vote Controls */
+  .vote-controls-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+  }
+
+  .vote-controls-inline.guest {
+    color: #6c757d;
+    font-size: 0.95em;
+  }
+
+  .vote-controls-inline.guest small {
+    margin-left: 0.25em;
+    color: #adb5bd;
+  }
+
+  .btn-vote-inline {
+    width: 36px;
+    height: 36px;
+    border: 2px solid #dee2e6;
+    background-color: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+
+  .btn-vote-inline:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+
+  .btn-vote-inline.btn-upvote:hover {
+    border-color: #28a745;
+    background-color: #d4edda;
+  }
+
+  .btn-vote-inline.btn-downvote:hover {
+    border-color: #dc3545;
+    background-color: #f8d7da;
+  }
+
+  .btn-vote-inline.btn-upvote.active {
+    border-color: #28a745;
+    background-color: #d4edda;
+  }
+
+  .btn-vote-inline.btn-downvote.active {
+    border-color: #dc3545;
+    background-color: #f8d7da;
+  }
+
+  .vote-arrow-inline {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #6c757d;
+    line-height: 1;
+  }
+
+  .btn-vote-inline.btn-upvote.active .vote-arrow-inline,
+  .btn-vote-inline.btn-upvote:hover .vote-arrow-inline {
+    color: #28a745;
+  }
+
+  .btn-vote-inline.btn-downvote.active .vote-arrow-inline,
+  .btn-vote-inline.btn-downvote:hover .vote-arrow-inline {
+    color: #dc3545;
+  }
+
+  .vote-score-inline {
+    font-size: 1.1em;
+    font-weight: 700;
+    color: #212529;
+    min-width: 32px;
+    text-align: center;
+  }
+
+  /* Inline Bookmark Button */
+  .btn-bookmark-inline {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.5em 1em;
+    border: 2px solid #dee2e6;
+    background-color: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    color: #6c757d;
+    transition: all 0.2s ease;
+  }
+
+  .btn-bookmark-inline:hover {
+    border-color: #ffc107;
+    background-color: #fff3cd;
+    color: #856404;
+  }
+
+  .btn-bookmark-inline .bookmark-icon {
+    font-size: 1.1em;
+  }
+
+  .btn-bookmark-inline.bookmarked {
+    border-color: #ffc107;
+    background-color: #fff3cd;
+    color: #856404;
+  }
+
+  .btn-bookmark-inline.bookmarked .bookmark-icon {
+    color: #ffc107;
+  }
+
+  .btn-bookmark-inline.bookmarked:hover {
+    background-color: #f8d7da;
+    border-color: #dc3545;
+    color: #721c24;
+  }
+
+  /* Small Action Buttons */
+  .btn-action-sm {
+    padding: 0.4em 1em;
+    border-radius: 5px;
+    font-weight: 500;
+    font-size: 0.85em;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .btn-action-sm.btn-edit {
+    background-color: #007bff;
+    color: white;
+  }
+
+  .btn-action-sm.btn-edit:hover {
+    background-color: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 123, 255, 0.3);
+  }
+
+  .btn-action-sm.btn-delete {
+    background-color: #dc3545;
+    color: white;
+  }
+
+  .btn-action-sm.btn-delete:hover {
+    background-color: #c82333;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(220, 53, 69, 0.3);
+  }
+
+  .btn-action-sm.btn-mod {
+    background-color: #6c757d;
+    color: white;
+  }
+
+  .btn-action-sm.btn-mod:hover {
+    background-color: #5a6268;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(108, 117, 125, 0.3);
+  }
+
+  /* Moderator Actions Row */
+  .mod-actions-row {
+    display: flex;
+    gap: 0.5em;
+    flex-wrap: wrap;
+  }
+
+  /* Approve/Clear AI Flag Button */
+  .btn-approve-inline {
+    padding: 0.6em 1.25em;
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+    color: white;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.9em;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.25);
+  }
+
+  .btn-approve-inline:hover {
+    background: linear-gradient(135deg, #218838 0%, #19692c 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.35);
   }
 </style>

@@ -5,12 +5,14 @@ class PostSearchQuery
     '30d' => 30.days
   }.freeze
 
-  def initialize(filters = {})
+  def initialize(filters = {}, current_user: nil)
     @filters = (filters || {}).with_indifferent_access
+    @current_user = current_user
   end
 
   def call
     scope = Post.active.includes(:topic, :tags).order(created_at: :desc)
+    scope = filter_ai_flagged(scope)
     scope = apply_post_ids(scope)
     scope = apply_author(scope)
     scope = apply_text(scope)
@@ -25,7 +27,23 @@ class PostSearchQuery
 
   private
 
-  attr_reader :filters
+  attr_reader :filters, :current_user
+
+  # Filter out AI-flagged posts from regular users
+  # - Moderators see all posts
+  # - Authors see their own AI-flagged posts
+  # - Regular users don't see AI-flagged posts
+  def filter_ai_flagged(scope)
+    return scope if current_user&.can_moderate?
+
+    if current_user
+      # Show non-flagged posts OR user's own posts (even if flagged)
+      scope.where('ai_flagged = ? OR user_id = ?', false, current_user.id)
+    else
+      # Guest users: only show non-flagged posts
+      scope.where(ai_flagged: false)
+    end
+  end
 
   def apply_text(scope)
     return scope if filters[:q].blank?

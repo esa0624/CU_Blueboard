@@ -7,7 +7,7 @@ class PostsController < ApplicationController
   # GET /posts
   def index
     build_filter_form
-    @posts = PostSearchQuery.new(@filter_form).call
+    @posts = PostSearchQuery.new(@filter_form, current_user: current_user).call
   end
 
   # GET /posts/my_threads
@@ -15,7 +15,7 @@ class PostsController < ApplicationController
     build_filter_form
     @viewing_my_threads = true
     filters = @filter_form.merge(author_id: current_user.id)
-    @posts = PostSearchQuery.new(filters).call
+    @posts = PostSearchQuery.new(filters, current_user: current_user).call
     render :index
   end
 
@@ -25,7 +25,7 @@ class PostsController < ApplicationController
     @viewing_bookmarked = true
     bookmarked_post_ids = current_user.bookmarks.pluck(:post_id)
     filters = @filter_form.merge(post_ids: bookmarked_post_ids)
-    @posts = PostSearchQuery.new(filters).call
+    @posts = PostSearchQuery.new(filters, current_user: current_user).call
     render :index
   end
 
@@ -51,6 +51,12 @@ class PostsController < ApplicationController
 
   # GET /posts/1
   def show
+    # Restrict access to AI-flagged posts: only author and moderators can view
+    if @post.ai_flagged? && @post.user != current_user && !current_user&.can_moderate?
+      redirect_to posts_path, alert: 'This post is not available.'
+      return
+    end
+
     @answer = Answer.new
     @answers = @post.answers.includes(:user, { answer_comments: :user }, { answer_revisions: :user }).order(created_at: :asc)
   end
@@ -144,6 +150,12 @@ class PostsController < ApplicationController
   end
 
   def appeal
+    # Only the author of an AI-flagged post can appeal
+    if @post.ai_flagged? && @post.user != current_user
+      redirect_to posts_path, alert: 'This post is not available.'
+      return
+    end
+
     if @post.user == current_user && @post.ai_flagged?
       @post.request_appeal!
       redirect_to @post, notice: 'Appeal submitted. A moderator will review your request.'

@@ -598,7 +598,6 @@ body {
   margin-bottom: 8px;
   background: #fafbfc;
   border-radius: 6px;
-  border-left: 3px solid #e5e7eb;
 }
 
 .answer-comment-header {
@@ -976,4 +975,24 @@ body {
   font-size: 0.95rem;
   margin-top: -12px;
   margin-bottom: 20px;
+}
+
+/* Elegant Redact Button */
+.btn-redact-elegant {
+  padding: 0.5em 1.25em;
+  background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.85em;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.25);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-redact-elegant:hover {
+  background: linear-gradient(135deg, #c82333 0%, #8b1722 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.35);
 }
