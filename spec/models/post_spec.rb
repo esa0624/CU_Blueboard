@@ -264,5 +264,13 @@ RSpec.describe Post, type: :model do
 
       create(:post)
     end
+
+    it 'logs warning and continues when job queue fails' do
+      allow(ScreenPostContentJob).to receive(:perform_later).and_raise(StandardError, 'Queue unavailable')
+      allow(Rails.logger).to receive(:warn)
+
+      expect { create(:post) }.not_to raise_error
+      expect(Rails.logger).to have_received(:warn).with(/Failed to enqueue content screening job/)
+    end
   end
 end
