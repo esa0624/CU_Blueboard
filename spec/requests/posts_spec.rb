@@ -312,6 +312,28 @@ RSpec.describe "Posts", type: :request do
       follow_redirect!
       expect(response.body).to include('This post has expired.')
     end
+
+    context "when viewing AI-flagged posts" do
+      let!(:ai_flagged_post) { create(:post, ai_flagged: true) }
+
+      it "redirects non-author non-moderator users" do
+        sign_in create(:user)
+
+        get post_path(ai_flagged_post)
+
+        expect(response).to redirect_to(posts_path)
+        follow_redirect!
+        expect(response.body).to include('This post is not available.')
+      end
+
+      it "allows moderators to view" do
+        sign_in create(:user, :moderator)
+
+        get post_path(ai_flagged_post)
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
   end
 
   describe "DELETE /posts/:id" do

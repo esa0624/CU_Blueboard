@@ -52,7 +52,7 @@ class PostsController < ApplicationController
   # GET /posts/1
   def show
     # Restrict access to AI-flagged posts: only author and moderators can view
-    if @post.ai_flagged? && @post.user != current_user && !current_user&.can_moderate?
+    if @post.ai_flagged? && @post.user != current_user && !current_user.can_moderate?
       redirect_to posts_path, alert: 'This post is not available.'
       return
     end

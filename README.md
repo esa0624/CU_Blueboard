@@ -127,6 +127,7 @@ CU Blueboard is an **anonymous Q&A platform** exclusively for verified Columbia/
 - Access the moderation dashboard (`/moderation/posts`) to review redacted content, view audit trails, and restore posts after review (moderator only).
 - Configure moderators via environment variable whitelist with automatic role assignment on OAuth login, eliminating manual role management.
 - Screen content automatically with OpenAI Moderation API detecting violence, hate, self-harm, and harassment; authors can submit appeals for moderator review.
+- AI-Flagged Post Visibility: Flagged posts are hidden from regular users in both list and detail views. Authors see their own flagged content with blur effect and "View My Content" button. Moderators see blur effect with "View the Post" button and can clear AI flags via "Clear AI Flag" button.
 - Bookmark/Unbookmark Posts: Users can click the star icon (☆/★) on any post card or post detail page to bookmark or unbookmark posts for later reference.
 - View Bookmarked Posts: Access all bookmarked posts via the "Bookmarks" link in the navigation header (positioned before "My Threads"), with full filter support (search, topic, tags, status, school, course, timeframe).
 - Visual Feedback: Gold filled star (★) indicates bookmarked posts, empty star (☆) for unbookmarked. Hover effects show yellow highlight for bookmarking and red highlight for removing bookmarks.
@@ -145,7 +146,8 @@ bundle exec cucumber
 ```
 
 **RSpec coverage**
-- Line Coverage: 100% (860 / 860) 350 examples, 0 failures
+- Line Coverage: 100% (873 / 873) 353 examples, 0 failures
+- Branch Coverage: 100% (257 / 257)
 - `spec/models/post_spec.rb`: validations, taxonomy limits, search helper, expiration logic, and thread-identity callback.
 - `spec/models/answer_spec.rb`: body validations, per-thread identities, reveal logging, and acceptance cleanup.
 - `spec/models/answer_comment_spec.rb`: comment validation + thread delegation to preserve pseudonyms.
@@ -156,20 +158,20 @@ bundle exec cucumber
 - `spec/requests/answer_likes_spec.rb`: answer upvote/downvote endpoints with toggle behavior.
 - `spec/requests/answer_comment_likes_spec.rb`: comment upvote/downvote endpoints with toggle behavior.
 - `spec/models/user_spec.rb`: anonymous handle helper and OmniAuth linkage for happy/duplicate/new flows.
-- `spec/requests/posts_spec.rb`: global feed filters, create/destroy, reveal identity, expiring threads, and the `my_threads` route.
+- `spec/requests/posts_spec.rb`: global feed filters, create/destroy, reveal identity, expiring threads, `my_threads` route, and AI-flagged post access control.
 - `spec/requests/answers_spec.rb`: CRUD, validation, authorization, identity reveals, edit/revision flows, and accept/reopen flows.
 - `spec/requests/answer_comments_spec.rb`: comment create/delete permissions and flash messaging.
 - `spec/requests/likes_spec.rb`: like/unlike endpoints with authentication guards.
 - `spec/requests/omniauth_callbacks_spec.rb`: Google SSO domain enforcement and account linking.
 - `spec/helpers/application_helper_spec.rb`: `display_author` pseudonym helper.
-- `spec/queries/post_search_query_spec.rb`: text/topic/status/tag/school/course/timeframe/author filters.
+- `spec/queries/post_search_query_spec.rb`: text/topic/status/tag/school/course/timeframe/author filters + AI-flagged filtering for moderators.
 - `spec/services/duplicate_post_finder_spec.rb`: verifies the composer's duplicate-detector logic.
 - `spec/models/bookmark_spec.rb`: bookmark associations, validations, uniqueness constraints, and helper methods.
 - `spec/requests/bookmarks_spec.rb`: bookmark/unbookmark endpoints, bookmarked posts listing, and authentication guards.
 
 **Cucumber scenarios**
 - Latest run: 29 scenarios / 202 steps passing in ~1.1s via `bundle exec cucumber`.
-- Coverage snapshot: line 100% (860/860), branch 100% (247/247) once merged with the RSpec suite. Run `bundle exec cucumber` followed by `open coverage/index.html` to inspect details.
+- Coverage snapshot: line 100% (873/873), branch 100% (257/257) once merged with the RSpec suite. Run `bundle exec cucumber` followed by `open coverage/index.html` to inspect details.
 - Reports publish to https://reports.cucumber.io by default (`CUCUMBER_PUBLISH_ENABLED=true`). Set `CUCUMBER_PUBLISH_QUIET=true` or pass `--publish-quiet` locally to silence the banner.
 - `features/posts/browse_posts.feature`: authenticated browsing, advanced filters, My Threads navigation, blank-search alerts, and guest redirect to the SSO screen.
 - `features/posts/create_post.feature`: signup + creation flow, validation failures, expiring threads, and draft preview UX.

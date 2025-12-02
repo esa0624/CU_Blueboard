@@ -57,4 +57,17 @@ RSpec.describe PostSearchQuery do
 
     expect(results).to contain_exactly(post_two)
   end
+
+  describe 'AI-flagged filtering' do
+    let!(:normal_post) { create(:post, ai_flagged: false) }
+    let!(:flagged_post) { create(:post, ai_flagged: true) }
+
+    it 'returns all posts for moderators including AI-flagged' do
+      moderator = create(:user, :moderator)
+
+      results = described_class.new({}, current_user: moderator).call
+
+      expect(results).to include(normal_post, flagged_post)
+    end
+  end
 end
