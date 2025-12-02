@@ -164,7 +164,7 @@ open coverage/index.html
 Running the test suites will generate a detailed coverage report in `coverage/index.html`.
 
 ## Deployment
-- Heroku: https://cu-blueboard-27a6a02ee825.herokuapp.com/
+- Heroku: https://cu-blueboard-2025-e68ebfea4530.herokuapp.com
 - Source code: https://github.com/esa0624/CU_Blueboard
 
 ### Heroku Deployment Checklist

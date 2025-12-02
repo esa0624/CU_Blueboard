@@ -313,9 +313,9 @@ Devise.setup do |config|
 
   # Configure Google OAuth only when credentials are present to avoid blowing up
   # in CI/test environments that do not have encrypted credentials available.
-  google_oauth_credentials = Rails.application.credentials.dig(:google_oauth2) || {}
-  google_oauth_client_id = google_oauth_credentials[:client_id] || ENV['GOOGLE_OAUTH_CLIENT_ID']
-  google_oauth_client_secret = google_oauth_credentials[:client_secret] || ENV['GOOGLE_OAUTH_CLIENT_SECRET']
+  # ENV first (for TA local testing with .env), credentials fallback (for production)
+  google_oauth_client_id = ENV['GOOGLE_OAUTH2_CLIENT_ID'] || Rails.application.credentials.dig(:google_oauth2, :client_id)
+  google_oauth_client_secret = ENV['GOOGLE_OAUTH2_CLIENT_SECRET'] || Rails.application.credentials.dig(:google_oauth2, :client_secret)
 
   if google_oauth_client_id.present? && google_oauth_client_secret.present?
     config.omniauth :google_oauth2,
