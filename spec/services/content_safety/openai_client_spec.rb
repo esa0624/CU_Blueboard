@@ -163,5 +163,27 @@ RSpec.describe ContentSafety::OpenaiClient, type: :service do
         )
       end
     end
+
+    context 'SSL verification in production' do
+      let(:safe_response) do
+        {
+          id: 'modr-prod',
+          model: 'omni-moderation-latest',
+          results: [{ flagged: false, categories: {}, category_scores: {} }]
+        }.to_json
+      end
+
+      before do
+        allow(Rails.env).to receive(:development?).and_return(false)
+        allow(Rails.env).to receive(:test?).and_return(false)
+        stub_request(:post, api_url)
+          .to_return(status: 200, body: safe_response, headers: { 'Content-Type' => 'application/json' })
+      end
+
+      it 'uses default SSL verification' do
+        result = client.screen(text: test_text)
+        expect(result[:flagged]).to be false
+      end
+    end
   end
 end
