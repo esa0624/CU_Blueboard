@@ -6,9 +6,37 @@
 - Mingliang Yu (`my2899`)
 - Yujia Zhai (`yz5133`)
 
-## Project Pitch 
+## Project Pitch
 - Video: https://youtu.be/9S1olW0Fe4o
 - Proposal: see `/docs/proposal.txt`
+
+## Why CU Blueboard?
+
+### The Problem
+First-year, international, and transfer students often struggle to find reliable answers about campus life (housing, visas, courses) without revealing their identity or receiving judgment.
+
+### Our Solution
+CU Blueboard is an **anonymous Q&A platform** exclusively for verified Columbia/Barnard students, combining the safety of verified identities with the freedom of anonymous expression.
+
+### Competitor Analysis: vs Sidechat
+
+| Aspect | Sidechat | CU Blueboard |
+|--------|----------|--------------|
+| **Format** | Feed-based ephemeral chatter | Structured Q&A knowledge base with "Accepted Answers" |
+| **Moderation** | AI + paid employees (generic) | AI pre-screening + Campus Staff who understand context |
+| **Accountability** | Fully anonymous (hateful content lingers) | "Identity Escrow" - anonymous to peers, verified by SSO |
+| **Academic Integrity** | No enforcement | Strict - redaction system + audit logs for violations |
+
+### Addressing Key Concerns
+
+**Q: How do you prevent hateful content from lingering like on Sidechat?**
+- **AI Pre-screening**: Every post is analyzed before publishing. Toxic content is blocked immediately.
+- **Identity Escrow**: Users are verified via SSO. Severe violations can be traced by administrators, creating accountability.
+
+**Q: How do you prevent homework/quiz answers from being posted?**
+1. **Prevention**: All users agree to Honor Code. Academic dishonesty = ban.
+2. **Moderation**: Staff can instantly redact content (hidden but preserved for evidence).
+3. **Accountability**: Immutable audit logs trace every action back to verified students.
 
 ## Prerequisites
 - Ruby `3.2.2` (see `.ruby-version`)
@@ -104,7 +132,6 @@
 - Visual Feedback: Gold filled star (★) indicates bookmarked posts, empty star (☆) for unbookmarked. Hover effects show yellow highlight for bookmarking and red highlight for removing bookmarks.
 - Data Model: Bookmark model with user-post associations and uniqueness constraint preventing duplicate bookmarks.
 
-
 ## Test Suites
 ```bash
 # RSpec unit/request coverage
@@ -167,23 +194,83 @@ Running the test suites will generate a detailed coverage report in `coverage/in
 - Heroku: https://cu-blueboard-2025-e68ebfea4530.herokuapp.com
 - Source code: https://github.com/esa0624/CU_Blueboard
 
-### Heroku Deployment Checklist
-After deploying to Heroku, run these commands to ensure the app works correctly:
+### Environment Variables Overview
+
+The `example.env` file contains all configurable environment variables. Copy it to `.env` for local development:
 
 ```bash
-# 1. Set environment variables
-heroku config:set GOOGLE_OAUTH2_CLIENT_ID=your_client_id --app your-app-name
-heroku config:set GOOGLE_OAUTH2_CLIENT_SECRET=your_client_secret --app your-app-name
-heroku config:set MODERATOR_EMAILS="ao2686@columbia.edu,hm3075@columbia.edu,lae2146@columbia.edu,xz2995@columbia.edu,jm5676@columbia.edu,jy2324@columbia.edu" --app your-app-name
+cp example.env .env
+```
 
-# 2. Run database migrations
-heroku run rails db:migrate --app your-app-name
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GOOGLE_OAUTH2_CLIENT_ID` | **Yes** | Google OAuth client ID from [Google Cloud Console](https://console.cloud.google.com/apis/credentials) |
+| `GOOGLE_OAUTH2_CLIENT_SECRET` | **Yes** | Google OAuth client secret |
+| `OPENAI_API_KEY` | No | OpenAI API key for AI content moderation (FREE tier available) |
+| `MODERATOR_EMAILS` | No | Comma-separated emails that get moderator role on login |
+| `ALLOWED_LOGIN_EMAILS` | No | Comma-separated emails that bypass @columbia.edu/@barnard.edu domain restriction |
 
-# 3. Seed the database (REQUIRED - creates topics and tags for post creation)
-heroku run rails db:seed --app your-app-name
+> **Note:** The `example.env` includes pre-configured TA and Team 8 emails for grading/testing. Replace with your own emails as needed.
 
-# 4. Verify deployment (optional)
-heroku run rails deployment:check --app your-app-name
+### Heroku Deployment Guide
+
+#### Initial Setup (First-time deployment)
+
+```bash
+# 1. Create Heroku app (if not already created)
+heroku create your-app-name
+
+# 2. Add PostgreSQL database
+heroku addons:create heroku-postgresql:essential-0
+
+# 3. Set Rails master key (required for credentials)
+heroku config:set RAILS_MASTER_KEY=$(cat config/master.key)
+
+# 4. Set environment variables
+# Google OAuth - get credentials from Google Cloud Console
+heroku config:set GOOGLE_OAUTH2_CLIENT_ID=your_client_id
+heroku config:set GOOGLE_OAUTH2_CLIENT_SECRET=your_client_secret
+
+# Moderator emails - use example.env values for grading, or customize with your own
+heroku config:set MODERATOR_EMAILS="your_email@columbia.edu,another@columbia.edu"
+
+# OpenAI API key - FREE tier, required to test AI content moderation features
+heroku config:set OPENAI_API_KEY=your_openai_api_key
+
+# 5. Configure Google OAuth callback URL
+#    Add this URL to Google Cloud Console > APIs & Services > Credentials > OAuth 2.0 Client
+#    Under "Authorized redirect URIs":
+#    https://your-app-name.herokuapp.com/users/auth/google_oauth2/callback
+
+# 6. Deploy to Heroku
+git add .
+git commit -m "Prepare for Heroku deployment"
+git push heroku main
+
+# 7. Run database migrations
+heroku run rails db:migrate
+
+# 8. Seed the database (REQUIRED - creates topics and tags)
+heroku run rails db:seed
+
+# 9. Open the app
+heroku open
+```
+
+#### Subsequent Deployments
+
+```bash
+git add .
+git commit -m "Your commit message"
+git push heroku main
+heroku run rails db:migrate  # Only if migrations were added
+```
+
+#### Verify Deployment
+
+```bash
+heroku run rails deployment:check
+heroku logs --tail  # View live logs
 ```
 
 **Important:** If posts cannot be created (no tags available), run `heroku run rails db:seed` to populate the required taxonomy data.
@@ -311,6 +398,23 @@ heroku run rails db:seed --app your-app-name  # Heroku
 - Verified that delete buttons still show a Turbo confirmation prompt before removing posts/answers, matching the “confirmation guardrails” promise in the README (`app/views/posts/show.html.erb`).
 - Trimmed optional directories (e.g., removed unused `app/mailers/`) so coverage reporting aligns with the actual code we ship and reflects the >95% combined line coverage.
 
+## Addressing Iteration 2 Feedback
+
+### Setup & Documentation
+- **OAuth with TA emails**: Updated README with clear instructions for adding TA emails as Google OAuth test users, plus `ALLOWED_LOGIN_EMAILS` env var to bypass domain restrictions for testing.
+- **Missing tags on Heroku**: Emphasized `rails db:seed` requirement in deployment guide - this creates the required topics and tags.
+- **Credentials setup**: Added `example.env` with all environment variables and clear fallback system (ENV first, Rails credentials second).
+
+### Feature Clarifications
+- **Solved vs Locked**: When an author accepts an answer, the thread is marked "solved" AND "locked" (no new answers). Authors can reopen if needed.
+- **Multi-tag filtering**: Currently uses OR logic (posts matching ANY selected tag). This prioritizes discovery over precision.
+- **School filter**: Posts without a school selection won't appear in school-filtered results. The filter shows posts explicitly tagged with that school.
+
+### Deployment Fixes
+- Fixed Heroku deployment by ensuring `db:seed` runs after `db:migrate` to populate tags.
+- Accept answer functionality now works correctly on deployed site.
+- Updated deployment guide with complete step-by-step instructions including PostgreSQL addon and callback URL configuration.
+
 ## Repository Map (key folders)
 ```text
 CU_Blueboard/
@@ -404,5 +508,6 @@ CU_Blueboard/
 ├── test/system/.keep                   # Placeholder to satisfy Rails system-test task
 ├── test/test_helper.rb                 # Remaining Minitest harness (empty)
 ├── README.md                           # Iteration instructions & deliverables
+├── example.env                         # Environment variables template (copy to .env)
 └── Gemfile                             # Dependencies (Rails 8.1, Devise, OmniAuth, etc.)
 ```

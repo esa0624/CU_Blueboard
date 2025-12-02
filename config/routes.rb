@@ -63,6 +63,10 @@ Rails.application.routes.draw do
     resources :likes, only: [ :create, :destroy ]
   end
 
+  # Static pages (public - no auth required)
+  get 'honor-code', to: 'pages#honor_code'
+  get 'terms', to: 'pages#terms'
+
   # Default root path helper
   root 'posts#index'
 end

@@ -45,7 +45,7 @@ class User < ApplicationRecord
     allowed_login_emails = Rails.application.config.allowed_login_emails || []
 
     # Domain check (skip if email is whitelisted)
-    unless allowed_login_emails.include?(email)
+    unless allowed_login_emails.map(&:downcase).include?(email.downcase)
       allowed_domains = [ '@columbia.edu', '@barnard.edu' ]
       email_domain = email.match(/@(.+)/)[1] # Extract domain after "@"
 
@@ -56,7 +56,7 @@ class User < ApplicationRecord
 
     # Check moderator whitelist (for all cases)
     moderator_emails = Rails.application.config.moderator_emails || []
-    target_role = moderator_emails.include?(auth.info.email) ? :moderator : :student
+    target_role = moderator_emails.map(&:downcase).include?(auth.info.email.downcase) ? :moderator : :student
 
     # Case 1: User previously signed in with Google
     # Find by provider and uid

@@ -1,0 +1,63 @@
+<% content_for :body_class, "login-page" %>
+<%= stylesheet_link_tag "login", "data-turbo-track": "reload" %>
+
+<div class="login-page-wrapper">
+
+  <header class="login-header">
+    <a href="<%= unauthenticated_root_path %>" class="logo-link">
+      <div class="header-logo-group">
+        <%= image_tag 'logos/cubb_owl.jpg', alt: 'CU BlueBoard Logo', class: 'logo-owl' %>
+        <div class="logo-text">
+          <span class="logo-main-text">CU BlueBoard</span>
+          <span class="logo-sub-text">Columbia & Barnard</span>
+        </div>
+      </div>
+    </a>
+    <nav class="header-nav">
+      <%= link_to 'Back to Login', unauthenticated_root_path %>
+    </nav>
+  </header>
+
+  <main class="policy-main-content">
+    <div class="policy-container">
+      <h1 class="policy-title">Terms of Service</h1>
+      <p class="policy-updated">Last Updated: December 01, 2025</p>
+
+      <section class="policy-section">
+        <h2>1. Acceptance of Terms</h2>
+        <p>By accessing and using CU BlueBoard, you accept and agree to be bound by these Terms of Service and our Honor Code. If you do not agree to these terms, please do not use this platform.</p>
+      </section>
+
+      <section class="policy-section">
+        <h2>2. Eligibility</h2>
+        <p>CU BlueBoard is exclusively available to verified Columbia University and Barnard College students, faculty, and staff. Access requires authentication through university SSO credentials.</p>
+      </section>
+
+      <section class="policy-section">
+        <h2>3. User Content</h2>
+        <p>You retain ownership of content you post. By posting, you grant CU BlueBoard a non-exclusive license to display and distribute your content within the platform. You are solely responsible for content you post and must ensure it complies with our Honor Code.</p>
+      </section>
+
+      <section class="policy-section">
+        <h2>4. Privacy</h2>
+        <p>Your identity is verified via SSO but displayed anonymously to other users. We collect minimal data necessary to operate the service. Your information may be disclosed to university administrators for policy violations or legal requirements.</p>
+      </section>
+
+      <section class="policy-section">
+        <h2>5. Moderation</h2>
+        <p>Content is subject to AI pre-screening and human moderation by university staff. We reserve the right to remove, redact, or flag content that violates our policies without prior notice.</p>
+      </section>
+
+      <section class="policy-section">
+        <h2>6. Disclaimer</h2>
+        <p>CU BlueBoard is provided "as is" without warranties of any kind. We do not guarantee the accuracy, completeness, or reliability of user-generated content. Academic advice should be verified with official university resources.</p>
+      </section>
+
+      <section class="policy-section">
+        <h2>7. Contact</h2>
+        <p>For questions about these terms or to report violations, please contact the CU BlueBoard moderation team through the platform.</p>
+      </section>
+    </div>
+  </main>
+
+</div>

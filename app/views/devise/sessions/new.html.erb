@@ -12,16 +12,18 @@
 <div class="login-page-wrapper">
   
   <header class="login-header">
-    <div class="header-logo-group">
-      <%= image_tag 'logos/cubb_owl.jpg', alt: 'CU BlueBoard Logo', class: 'logo-owl' %>
-      <div class="logo-text">
-        <span class="logo-main-text">CU BlueBoard</span>
-        <span class="logo-sub-text">Columbia & Barnard</span>
+    <a href="<%= unauthenticated_root_path %>" class="logo-link">
+      <div class="header-logo-group">
+        <%= image_tag 'logos/cubb_owl.jpg', alt: 'CU BlueBoard Logo', class: 'logo-owl' %>
+        <div class="logo-text">
+          <span class="logo-main-text">CU BlueBoard</span>
+          <span class="logo-sub-text">Columbia & Barnard</span>
+        </div>
       </div>
-    </div>
+    </a>
     <nav class="header-nav">
-      <a href="#">About</a>
-      <a href="#">Help</a>
+      <%= link_to 'Honor Code', honor_code_path %>
+      <%= link_to 'Terms', terms_path %>
     </nav>
   </header>
 
@@ -36,9 +38,9 @@
         </div>
       <% end %>
       
-      <%= button_to user_google_oauth2_omniauth_authorize_path, 
-              method: :post, 
-              data: { turbo: "false" }, 
+      <%= button_to user_google_oauth2_omniauth_authorize_path,
+              method: :post,
+              data: { turbo: "false" },
               class: "btn-sso-login" do %>
 
         <%= image_tag 'icons/crown.png', alt: 'Verified', class: 'icon-crown' %>
@@ -46,6 +48,12 @@
           Only for Columbia and Barnard<br>Students & Faculty
         </span>
       <% end %>
+
+      <p class="agreement-text">
+        By signing in, you agree to our
+        <%= link_to 'Honor Code', honor_code_path, target: '_blank' %> and
+        <%= link_to 'Terms of Service', terms_path, target: '_blank' %>.
+      </p>
     </div>
     
     <div class="login-sub-links">

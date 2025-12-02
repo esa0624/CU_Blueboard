@@ -274,18 +274,122 @@ body.login-page::before {
 .login-error-message {
   /* !! 关键样式：红色文字 !! */
   color: #FFCDD2; /* 一种在深蓝背景上可读的浅红色 */
-  
+
   background-color: rgba(200, 0, 0, 0.2); /* 轻微的红色背景 */
   border: 1px solid #E57373; /* 柔和的红色边框 */
-  
+
   padding: 12px 16px;
   border-radius: 8px;
-  
+
   margin-top: 16px;
   margin-bottom: 24px;
-  
+
   font-size: 0.9rem;
   font-weight: 500;
   text-align: center;
   line-height: 1.4;
+}
+
+/* ======================================= */
+/* 6. Logo Link (Clickable)               */
+/* ======================================= */
+
+.logo-link {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.logo-link:hover .logo-main-text {
+  text-decoration: underline;
+}
+
+/* ======================================= */
+/* 7. Agreement Text                       */
+/* ======================================= */
+
+.agreement-text {
+  margin-top: 16px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.agreement-text a {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: underline;
+}
+
+.agreement-text a:hover {
+  color: white;
+}
+
+/* ======================================= */
+/* 8. Policy Pages (Honor Code, Terms)    */
+/* ======================================= */
+
+.policy-main-content {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 20px;
+  background-color: #f5f7fa;
+  box-sizing: border-box;
+}
+
+.policy-container {
+  max-width: 800px;
+  width: 100%;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  padding: 48px;
+  box-sizing: border-box;
+}
+
+.policy-title {
+  color: #004B8D;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.policy-updated {
+  color: #666;
+  font-size: 0.875rem;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.policy-section {
+  margin-bottom: 28px;
+}
+
+.policy-section h2 {
+  color: #333;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.policy-section p {
+  color: #555;
+  font-size: 1rem;
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+
+.policy-section ul {
+  color: #555;
+  font-size: 1rem;
+  line-height: 1.7;
+  margin: 0;
+  padding-left: 24px;
+}
+
+.policy-section li {
+  margin-bottom: 8px;
 }

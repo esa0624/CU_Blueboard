@@ -15,6 +15,13 @@ Given('an expired post titled {string} exists') do |title|
   create(:post, :expired, title: title, body: 'Expired body')
 end
 
+Given('I own a post titled {string} with body {string}') do |title, body|
+  user = create(:user, email: 'owner@example.com', password: 'Password123!', password_confirmation: 'Password123!')
+  @last_created_post = create(:post, user: user, title: title, body: body)
+  login_as(user, scope: :user)
+  @current_user_email = user.email
+end
+
 Given('a user exists with email {string} and password {string}') do |email, password|
   create(:user, email: email, password: password, password_confirmation: password)
 end

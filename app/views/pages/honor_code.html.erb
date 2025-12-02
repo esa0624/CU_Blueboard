@@ -1,0 +1,70 @@
+<% content_for :body_class, "login-page" %>
+<%= stylesheet_link_tag "login", "data-turbo-track": "reload" %>
+
+<div class="login-page-wrapper">
+
+  <header class="login-header">
+    <a href="<%= unauthenticated_root_path %>" class="logo-link">
+      <div class="header-logo-group">
+        <%= image_tag 'logos/cubb_owl.jpg', alt: 'CU BlueBoard Logo', class: 'logo-owl' %>
+        <div class="logo-text">
+          <span class="logo-main-text">CU BlueBoard</span>
+          <span class="logo-sub-text">Columbia & Barnard</span>
+        </div>
+      </div>
+    </a>
+    <nav class="header-nav">
+      <%= link_to 'Back to Login', unauthenticated_root_path %>
+    </nav>
+  </header>
+
+  <main class="policy-main-content">
+    <div class="policy-container">
+      <h1 class="policy-title">Honor Code</h1>
+      <p class="policy-updated">Last Updated: December 01, 2025</p>
+
+      <section class="policy-section">
+        <h2>Academic Integrity</h2>
+        <p>CU BlueBoard is committed to upholding the academic integrity standards of Columbia University and Barnard College. By using this platform, you agree to:</p>
+        <ul>
+          <li>Not post or request answers to exams, quizzes, or graded assignments</li>
+          <li>Not share copyrighted course materials without permission</li>
+          <li>Not engage in any form of academic dishonesty</li>
+          <li>Report any content that violates academic integrity policies</li>
+        </ul>
+      </section>
+
+      <section class="policy-section">
+        <h2>Community Standards</h2>
+        <p>As a member of the CU BlueBoard community, you agree to:</p>
+        <ul>
+          <li>Treat all community members with respect and dignity</li>
+          <li>Not post hateful, discriminatory, or harassing content</li>
+          <li>Not impersonate other students, faculty, or staff</li>
+          <li>Use the platform for its intended purpose of constructive Q&A</li>
+        </ul>
+      </section>
+
+      <section class="policy-section">
+        <h2>Identity Escrow</h2>
+        <p>While posts on CU BlueBoard are anonymous to other users, your identity is verified through Columbia/Barnard SSO and may be disclosed to university administrators in cases of:</p>
+        <ul>
+          <li>Serious violations of the Honor Code</li>
+          <li>Threats to campus safety</li>
+          <li>Legal requirements</li>
+        </ul>
+      </section>
+
+      <section class="policy-section">
+        <h2>Consequences</h2>
+        <p>Violations of this Honor Code may result in:</p>
+        <ul>
+          <li>Content removal or redaction</li>
+          <li>Temporary or permanent account suspension</li>
+          <li>Referral to university disciplinary processes</li>
+        </ul>
+      </section>
+    </div>
+  </main>
+
+</div>

@@ -19,6 +19,7 @@ After do
 end
 
 Before do
+  Warden.test_reset!
   TaxonomySeeder.seed!
 end
 
