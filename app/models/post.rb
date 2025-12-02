@@ -142,6 +142,9 @@ class Post < ApplicationRecord
   def screen_content_async
     # Enqueue background job to screen content with OpenAI Moderation API
     ScreenPostContentJob.perform_later(id)
+  rescue StandardError => e
+    # Don't crash post creation if job queue is unavailable
+    Rails.logger.warn "Failed to enqueue content screening job: #{e.message}"
   end
 
   def extract_user_id(user)
