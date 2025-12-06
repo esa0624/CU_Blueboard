@@ -34,9 +34,23 @@ When('I click the upvote button on the comment {string}') do |comment_body|
   end
 end
 
+When('I click the downvote button on the comment {string}') do |comment_body|
+  comment = AnswerComment.find_by!(body: comment_body)
+  within("#comment-#{comment.id}") do
+    find('.btn-downvote').click
+  end
+end
+
 Then('I should see the comment {string} has {int} upvote') do |comment_body, count|
   comment = AnswerComment.find_by!(body: comment_body)
   within("#comment-#{comment.id}") do
     expect(find('.vote-score-micro')).to have_content(count)
+  end
+end
+
+Then('I should see the comment {string} has {int} downvote') do |comment_body, count|
+  comment = AnswerComment.find_by!(body: comment_body)
+  within("#comment-#{comment.id}") do
+    expect(find('.vote-score-micro')).to have_content("-#{count}")
   end
 end

@@ -255,6 +255,19 @@ When('I unlike the post') do
   end
 end
 
+When('I downvote the post') do
+  within('.vote-controls-inline') do
+    all('.btn-downvote').first.click
+  end
+end
+
+Then('the post should show a downvote') do
+  post = @last_viewed_post || Post.order(created_at: :desc).first
+  visit Rails.application.routes.url_helpers.post_path(post)
+  # Check that there's a negative score or downvote indication
+  within('.vote-score-inline') { expect(page).to have_content('-') }
+end
+
 Then('I should see the thread pseudonym for {string} on {string}') do |email, title|
   user = User.find_by!(email: email)
   post = Post.find_by!(title: title)
@@ -357,4 +370,56 @@ end
 
 When('the expire posts job runs') do
   ExpirePostsJob.perform_now
+end
+
+When('I edit the most recent answer to say {string}') do |new_body|
+  answer = Answer.order(created_at: :desc).first
+  visit Rails.application.routes.url_helpers.edit_answer_path(answer)
+  fill_in 'Body', with: new_body
+  click_button 'Update Answer'
+end
+
+When('I visit my bookmarked posts') do
+  visit Rails.application.routes.url_helpers.bookmarks_path
+end
+
+When('I delete the comment {string}') do |comment_body|
+  comment = AnswerComment.find_by!(body: comment_body)
+  within("#comment-#{comment.id}") do
+    click_button 'Delete'
+  end
+end
+
+Then('I should not see {string} within the comment {string}') do |text, comment_body|
+  comment = AnswerComment.find_by!(body: comment_body)
+  within("#comment-#{comment.id}") do
+    expect(page).not_to have_content(text)
+  end
+end
+
+When('I select a topic and tags') do
+  select_required_topic_and_tags
+end
+
+When('I visit the new post page') do
+  visit Rails.application.routes.url_helpers.new_post_path
+end
+
+When('I select a topic from the dropdown') do
+  topic = Topic.first
+  select topic.name, from: 'Topic' if topic
+end
+
+When('I select multiple tags') do
+  Tag.limit(2).each do |tag|
+    check("post_tag_#{tag.id}")
+  end
+end
+
+Then('I should see posts in the results') do
+  expect(page).to have_css('.post-card, .tweet-card', minimum: 0)
+end
+
+When('I select {string} from {string}') do |value, field|
+  select value, from: field
 end

@@ -18,6 +18,17 @@ When('I click "Redact Answer" for the answer {string}') do |answer_body|
   end
 end
 
+When('I click "Unredact Answer" for the answer {string}') do |answer_body|
+  answer = Answer.find_by!(body: answer_body)
+  within("#answer-#{answer.id}") do
+    click_button 'Unredact Answer'
+  end
+end
+
+When('I select {string} from the redaction state') do |state|
+  select state, from: 'redaction_state'
+end
+
 When('I fill in "Redaction Reason" with {string}') do |reason|
   fill_in 'redaction_reason', with: reason
 end

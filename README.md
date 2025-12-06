@@ -217,24 +217,30 @@ bundle exec cucumber
 **Helpers** (1 spec)
 - `spec/helpers/application_helper_spec.rb`: `display_author` pseudonym helper
 
+
 ### Cucumber scenarios
-- **Overall:** 48 scenarios, 343 steps passing in ~1.9s
-- **Coverage:** 100% line (927/927), 100% branch (283/283) when merged with RSpec
+- **Overall:** 65 scenarios, 483 steps passing in ~2.7s
+- **Standalone Coverage:** 83.5% line (774/927), 55.83% branch (158/283)
+- **Combined Coverage:** 100% line (927/927), 100% branch (283/283) when merged with RSpec
 - **Reports:** Publish to https://reports.cucumber.io by default. Set `CUCUMBER_PUBLISH_QUIET=true` or `--publish-quiet` to silence.
 
-**Posts & Content** (8 features)
+**Posts & Content** (10 features)
 - `features/posts/browse_posts.feature`: browsing, filters, My Threads, blank-search alerts, guest redirect
 - `features/posts/create_post.feature`: signup, creation flow, validation failures, expiring threads
 - `features/posts/edit_post.feature`: editing, revision history
-- `features/posts/like_post.feature`: like/unlike toggle, count updates
+- `features/posts/like_post.feature`: like/unlike toggle, upvote/downvote switching, count updates
 - `features/posts/reveal_identity.feature`: identity reveal buttons, audit logs
 - `features/posts/thread_pseudonym.feature`: unique pseudonyms per thread
 - `features/posts/accept_answer.feature`: accept/lock/reopen threads
 - `features/posts/expire_posts_job.feature`: ExpirePostsJob cleanup
+- `features/posts/report_post.feature`: flagging content, moderator dismissing flags
+- `features/posts/update_post.feature`: post editing, revision history tracking
 
-**Answers & Comments** (2 features)
+**Answers & Comments** (4 features)
 - `features/answers/add_answer.feature`: answering, validation, delete permissions
-- `features/votes/voting.feature`: upvoting/downvoting answers and comments
+- `features/answers/answer_acceptance.feature`: accepting answers, locking/reopening threads
+- `features/answers/delete_comments.feature`: comment deletion by authors
+- `features/votes/voting.feature`: upvoting/downvoting posts, answers, and comments with toggle/switch logic
 
 **Authentication** (2 features)
 - `features/auth/google_sign_in.feature`: OAuth success/rejection for campus emails
@@ -554,7 +560,10 @@ CU_Blueboard/
 ├── docs/
 │   └── proposal.txt                    # Iteration proposal document
 ├── features/
-│   ├── answers/add_answer.feature           # Answering and delete permissions
+│   ├── answers/
+│   │   ├── add_answer.feature               # Answering and delete permissions
+│   │   ├── answer_acceptance.feature        # Accept/lock/reopen threads
+│   │   └── delete_comments.feature          # Comment deletion by authors
 │   ├── auth/
 │   │   ├── google_sign_in.feature           # Google OAuth flows (success + rejection)
 │   │   └── test_login.feature               # Test login for TAs/graders
@@ -565,12 +574,14 @@ CU_Blueboard/
 │   │   ├── accept_answer.feature            # Accept + lock + reopen threads
 │   │   ├── browse_posts.feature             # Browse/search feed + My Threads
 │   │   ├── create_post.feature              # Signup + post creation flow
+│   │   ├── edit_post.feature                # Post editing + revision history
 │   │   ├── expire_posts_job.feature         # ExpirePostsJob cleanup scenario
-│   │   ├── like_post.feature                # Like/unlike toggle flow
+│   │   ├── like_post.feature                # Like/unlike toggle + upvote/downvote switching
+│   │   ├── report_post.feature              # Flagging content, moderator dismissing flags
 │   │   ├── reveal_identity.feature          # Identity reveal flows
 │   │   ├── thread_pseudonym.feature         # Thread-specific pseudonym checks
-│   │   └── edit_post.feature                # Post editing + revision history
-│   ├── votes/voting.feature                 # Answer/comment voting
+│   │   └── update_post.feature              # Post updates + revision history tracking
+│   ├── votes/voting.feature                 # Answer/comment voting with toggle/switch logic
 │   ├── static_pages.feature                 # Honor Code, Terms pages
 │   ├── sad_paths.feature                    # System failures & edge cases
 │   ├── step_definitions/
