@@ -155,10 +155,10 @@ bundle exec rspec
 bundle exec cucumber
 ```
 
-**RSpec coverage**
-- **Overall:** 410 examples, 0 failures
-- **Line Coverage:** 100% (909/909)
-- **Branch Coverage:** 100% (279/279)
+### RSpec coverage
+- **Overall:** 414 examples, 0 failures
+- **Line Coverage:** 100% (927/927)
+- **Branch Coverage:** 100% (283/283)
 
 **Models** (13 specs)
 - `spec/models/post_spec.rb`: validations, taxonomy limits, search helper, expiration logic, thread-identity callback
@@ -217,9 +217,9 @@ bundle exec cucumber
 **Helpers** (1 spec)
 - `spec/helpers/application_helper_spec.rb`: `display_author` pseudonym helper
 
-**Cucumber scenarios**
+### Cucumber scenarios
 - **Overall:** 48 scenarios, 343 steps passing in ~1.9s
-- **Coverage:** 100% line (909/909), 100% branch (279/279) when merged with RSpec
+- **Coverage:** 100% line (927/927), 100% branch (283/283) when merged with RSpec
 - **Reports:** Publish to https://reports.cucumber.io by default. Set `CUCUMBER_PUBLISH_QUIET=true` or `--publish-quiet` to silence.
 
 **Posts & Content** (8 features)
@@ -579,9 +579,11 @@ CU_Blueboard/
 │   │   ├── moderation_steps.rb              # Moderation action steps
 │   │   ├── navigation_steps.rb              # Navigation helper steps
 │   │   ├── test_login_steps.rb              # Test login step definitions
-│   │   └── voting_steps.rb                  # Voting/upvote/downvote steps
+│   │   ├── voting_steps.rb                  # Voting/upvote/downvote steps
+│   │   └── coverage_steps.rb                # Coverage-related step definitions
 │   └── support/
 │       ├── env.rb                           # Cucumber+DatabaseCleaner/OmniAuth setup
+│       ├── factory_bot.rb                   # FactoryBot configuration for Cucumber
 │       └── rspec_mocks.rb                   # RSpec mocks integration
 ├── lib/tasks/cucumber.rake             # Rake tasks for Cucumber profiles
 ├── spec/
