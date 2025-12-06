@@ -45,7 +45,7 @@ class Post < ApplicationRecord
   validates :body, presence: true
   validates :topic, presence: true
   validates :status, presence: true, inclusion: { in: STATUSES.values }
-  validates :school, presence: true, inclusion: { in: SCHOOLS }
+  validates :school, inclusion: { in: SCHOOLS }, allow_nil: true
 
   validate :expires_at_within_window
   validate :accepted_answer_belongs_to_post

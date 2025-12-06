@@ -15,7 +15,7 @@
   <% if @redacted_posts.any? %>
     <div class="posts-list">
       <% @redacted_posts.each do |post| %>
-        <div class="post-card" id="post-<%= post.id %>">
+        <div class="post-card">
           <div class="post-card-header">
             <h3 class="post-title">
               <%= link_to post.title, post_path(post) %>
@@ -75,7 +75,7 @@
   <% if @reported_posts.any? %>
     <div class="moderation-grid">
       <% @reported_posts.each do |post| %>
-        <div class="post-card ai-flagged-card" style="border-color: #17a2b8; background-color: #f0f8ff;" id="post-<%= post.id %>">
+        <div class="post-card ai-flagged-card" style="border-color: #17a2b8; background-color: #f0f8ff;">
           <div class="post-card-header">
             <h3 class="post-title">
               <%= link_to post.title, post_path(post) %>
@@ -132,7 +132,7 @@
   <% if @ai_flagged_posts.any? %>
     <div class="posts-list">
       <% @ai_flagged_posts.each do |post| %>
-        <div class="post-card ai-flagged-card" id="post-<%= post.id %>">
+        <div class="post-card ai-flagged-card">
           <div class="post-card-header">
             <h3 class="post-title">
               <%= link_to post.title, post_path(post) %>

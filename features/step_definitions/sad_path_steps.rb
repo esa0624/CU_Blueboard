@@ -1,15 +1,12 @@
 Given('the next update to the post will fail') do
-  login_as(User.find_by(email: @current_user_email), scope: :user) if defined?(@current_user_email) && @current_user_email
   allow_any_instance_of(Post).to receive(:update).and_return(false)
 end
 
 Given('the next save to the bookmark will fail') do
-  login_as(User.find_by(email: @current_user_email), scope: :user) if defined?(@current_user_email) && @current_user_email
   allow_any_instance_of(Bookmark).to receive(:save).and_return(false)
 end
 
 Given('the next destroy to the bookmark will fail') do
-  login_as(User.find_by(email: @current_user_email), scope: :user) if defined?(@current_user_email) && @current_user_email
   allow_any_instance_of(Bookmark).to receive(:destroy).and_return(false)
 end
 

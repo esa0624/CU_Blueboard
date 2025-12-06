@@ -37,7 +37,7 @@
           <%= flash[:alert] %>
         </div>
       <% end %>
-
+      
       <%= button_to user_google_oauth2_omniauth_authorize_path,
               method: :post,
               data: { turbo: "false" },
@@ -49,24 +49,12 @@
         </span>
       <% end %>
 
-      <!-- Test Login Buttons -->
-      <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 12px; width: 100%;">
-        <%= button_to test_login_student_path, method: :post, class: "btn-sso-login", style: "background-color: #6c757d; color: white;" do %>
-          <span>Test as User</span>
-        <% end %>
-        
-        <%= button_to test_login_moderator_path, method: :post, class: "btn-sso-login", style: "background-color: #6c757d; color: white;" do %>
-          <span>Test as Moderator</span>
-        <% end %>
-      </div>
-
       <p class="agreement-text">
         By signing in, you agree to our
         <%= link_to 'Honor Code', honor_code_path, target: '_blank' %> and
         <%= link_to 'Terms of Service', terms_path, target: '_blank' %>.
       </p>
     </div>
-
     
     <div class="login-sub-links">
       <%# 链接已注释 %>

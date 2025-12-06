@@ -14,10 +14,6 @@ Rails.application.routes.draw do
     devise_scope :user do
       root 'devise/sessions#new', as: :unauthenticated_root
     end
-
-    # Test Login Routes
-    post 'test_login/student', to: 'test_sessions#create_student'
-    post 'test_login/moderator', to: 'test_sessions#create_moderator'
   end
 
   # Moderation namespace for staff/moderator actions

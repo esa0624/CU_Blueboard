@@ -39,30 +39,22 @@
     end %>
 
   <div class="form-field">
-    <%= form.label :title, class: "form-label" do %>
-      Title <span class="required-indicator">*</span>
-    <% end %>
+    <%= form.label :title, class: "form-label" %>
     <%= form.text_field :title, class: "form-input", placeholder: "Enter your question title..." %>
   </div>
 
   <div class="form-field">
-    <%= form.label :body, class: "form-label" do %>
-      Content <span class="required-indicator">*</span>
-    <% end %>
+    <%= form.label :body, "Content", class: "form-label" %>
     <%= form.text_area :body, class: "form-textarea", placeholder: "Add your details here..." %>
   </div>
 
   <div class="form-field">
-    <%= form.label :topic_id, class: "form-label" do %>
-      Topic <span class="required-indicator">*</span>
-    <% end %>
+    <%= form.label :topic_id, "Topic", class: "form-label" %>
     <%= form.collection_select :topic_id, @topics, :id, :name, { prompt: "Select a topic" }, class: "form-input" %>
   </div>
 
   <div class="form-field" data-controller="tag-picker" data-tag-picker-max-value="<%= Post::TAG_LIMIT %>">
-    <%= form.label :tag_ids, class: "form-label" do %>
-      Tags <span class="required-indicator">*</span>
-    <% end %>
+    <%= form.label :tag_ids, "Tags", class: "form-label" %>
     <div class="tag-picker">
       <%= hidden_field_tag 'post[tag_ids][]', '' %>
       <% if @tags.any? %>
@@ -83,9 +75,7 @@
   </div>
 
   <div class="form-field">
-    <%= form.label :school, class: "form-label" do %>
-      School <span class="required-indicator">*</span>
-    <% end %>
+    <%= form.label :school, class: "form-label" %>
     <%= form.select :school,
           options_for_select(Post::SCHOOLS, post.school),
           { include_blank: 'Select a school' },

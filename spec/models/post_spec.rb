@@ -24,10 +24,9 @@ RSpec.describe Post, type: :model do
     expect(post.errors[:topic]).to include("can't be blank")
   end
 
-  it 'is invalid without a school' do
+  it 'is valid without a school' do
     post = build(:post, school: nil)
-    expect(post).not_to be_valid
-    expect(post.errors[:school]).to include("can't be blank")
+    expect(post).to be_valid
   end
 
   it 'is invalid with an invalid school' do
