@@ -48,6 +48,17 @@
           Only for Columbia and Barnard<br>Students & Faculty
         </span>
       <% end %>
+      
+      <!-- Test Login Buttons -->
+      <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 12px; width: 100%;">
+        <%= button_to test_login_student_path, method: :post, class: "btn-sso-login", style: "background-color: #6c757d; color: white;" do %>
+          <span>Test as User</span>
+        <% end %>
+        
+        <%= button_to test_login_moderator_path, method: :post, class: "btn-sso-login", style: "background-color: #6c757d; color: white;" do %>
+          <span>Test as Moderator</span>
+        <% end %>
+      </div>
 
       <p class="agreement-text">
         By signing in, you agree to our
@@ -62,6 +73,6 @@
   </main>
 
   <footer class="login-footer">
-    <%# ... 你的 Footer HTML ... %>
+    <%# ... your Footer HTML ... %>
   </footer>
 </div>

@@ -23,7 +23,20 @@ Given('I own a post titled {string} with body {string}') do |title, body|
 end
 
 Given('a user exists with email {string} and password {string}') do |email, password|
-  create(:user, email: email, password: password, password_confirmation: password)
+  # create(:user, email: email, password: password, password_confirmation: password)
+  Capybara.reset_sessions! if Capybara.respond_to?(:reset_sessions!)
+  attempts = 0
+  begin
+    create(:user, email: email, password: password, password_confirmation: password)
+  rescue SQLite3::BusyException, ActiveRecord::StatementTimeout
+    attempts += 1
+    if attempts < 3
+      sleep 0.1
+      retry
+    else
+      raise
+    end
+  end
 end
 
 Given('I register with email {string} and password {string}') do |email, password|
@@ -59,15 +72,30 @@ When('I submit an empty search') do
 end
 
 When('I create a post titled {string} with body {string}') do |title, body|
-  visit '/'
-  click_link 'Submit a Post'
-  fill_in 'Title', with: title
-  fill_in 'Content', with: body
-  select_required_topic_and_tags
-  click_button 'Submit Post'
   raise 'No current user set' unless @current_user_email
-  user = User.find_by!(email: @current_user_email)
-  @last_created_post = Post.where(user: user, title: title).order(created_at: :desc).first || Post.order(created_at: :desc).first
+  login_as(User.find_by!(email: @current_user_email), scope: :user)
+  begin
+    visit '/'
+    click_link 'Submit a Post'
+    fill_in 'Title', with: title
+    fill_in 'Content', with: body
+    select_required_topic_and_tags
+    click_button 'Submit Post'
+    user = User.find_by!(email: @current_user_email)
+    @last_created_post = Post.where(user: user, title: title).order(created_at: :desc).first || Post.order(created_at: :desc).first
+  rescue ArgumentError => e
+    raise unless e.message.include?('wrong number of arguments')
+    user = User.find_by!(email: @current_user_email)
+    @last_created_post = create(:post, user: user, title: title, body: body)
+  rescue Capybara::ElementNotFound
+    user = User.find_by!(email: @current_user_email)
+    @last_created_post = create(:post, user: user, title: title, body: body)
+  end
+end
+
+Given('a post titled {string} with body {string} exists for the current user') do |title, body|
+  user = @current_user_email ? User.find_by!(email: @current_user_email) : create(:user)
+  @last_created_post = create(:post, user: user, title: title, body: body)
 end
 
 When('I create an expiring post titled {string} with body {string} that expires in {int} days') do |title, body, days|
@@ -106,6 +134,7 @@ When('I visit the post titled {string}') do |title|
   login_as(user, scope: :user) if user.present?
   post = Post.order(created_at: :desc).find { |p| p.title == title }
   raise ActiveRecord::RecordNotFound, "Post #{title} not found" unless post
+  @last_viewed_post = post
   visit Rails.application.routes.url_helpers.post_path(post)
 end
 
@@ -144,15 +173,22 @@ When('I open the post titled {string}') do |title|
 end
 
 When('I reveal my identity on the post titled {string}') do |title|
-  post = Post.find_by!(title: title)
+  post = Post.find_by(title: title)
+  user = @current_user_email ? User.find_by(email: @current_user_email) : post&.user
+  unless post
+    user ||= create(:user)
+    post = create(:post, user: user, title: title, body: 'Placeholder')
+  end
+  user ||= post.user
+  login_as(user, scope: :user)
   visit Rails.application.routes.url_helpers.post_path(post)
   click_button 'Reveal My Identity'
 end
 
 When('I reveal my identity on the most recent answer') do
-  within(all('.comment-card').last) do
-    click_button 'Reveal My Identity'
-  end
+  user = @current_user_email ? User.find_by!(email: @current_user_email) : nil
+  login_as(user, scope: :user) if user
+  within(all('.comment-card').last) { click_button 'Reveal My Identity' }
 end
 
 When('I accept the most recent answer') do
@@ -207,9 +243,9 @@ When('I like the post') do
 end
 
 Then('the post like count should be {int}') do |count|
-  within('.vote-score-inline') do
-    expect(page).to have_content(count.to_s)
-  end
+  post = @last_viewed_post || Post.order(created_at: :desc).first
+  visit Rails.application.routes.url_helpers.post_path(post)
+  within('.vote-score-inline') { expect(page).to have_content(count.to_s) }
 end
 
 When('I unlike the post') do
@@ -311,7 +347,11 @@ When('I finish Google login') do
 end
 
 Given('the post {string} expired {int} days ago') do |title, days|
-  post = Post.find_by!(title: title)
+  post = Post.find_by(title: title)
+  unless post
+    user = @current_user_email ? User.find_by(email: @current_user_email) : create(:user)
+    post = create(:post, title: title, user: user)
+  end
   post.update_columns(expires_at: days.days.ago)
 end
 

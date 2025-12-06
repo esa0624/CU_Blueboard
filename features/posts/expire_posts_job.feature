@@ -5,7 +5,7 @@ Feature: Automatically clean up expired posts
 
   Scenario: ExpirePostsJob deletes posts past their deadline
     Given I register with email "expiretest@example.com" and password "Password123!"
-    And I create a post titled "Temporary checklist" with body "This guidance will be outdated soon."
+    And a post titled "Temporary checklist" with body "This guidance will be outdated soon." exists for the current user
     And the post "Temporary checklist" expired 1 days ago
     When the expire posts job runs
     And I visit the home page

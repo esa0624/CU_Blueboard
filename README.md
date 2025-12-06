@@ -136,6 +136,16 @@ CU Blueboard is an **anonymous Q&A platform** exclusively for verified Columbia/
 - Reply Comment Indentation: AnswerComments are visually indented with a left border to show comment hierarchy clearly.
 - Enhanced Sample Data: 25 realistic posts, 60+ answers, 20+ reply comments with authentic college student language (slang, abbreviations) covering academics, housing, careers, wellness, and campus life topics.
 
+### Default flows covered in Final Submission
+- **Addressing Iteration 2 Feedback - School Filter Logic**: Refined `PostSearchQuery` service so posts marked as "General" appear in both Columbia and Barnard feeds, while school-specific filters correctly show only posts from that school plus General posts, verified by comprehensive RSpec tests in `spec/requests/general_school_filter_spec.rb`.
+- **Addressing Iteration 2 Feedback - Multi-Tag Search Clarity**: Added interactive toggle UI on the search form allowing users to switch between "Match ANY" (OR logic - shows posts with at least one selected tag) and "Match ALL" (AND logic - shows posts with all selected tags), with visual feedback showing the active mode and defaulting to "Match ANY" for broader discovery.
+- **Addressing Iteration 2 Feedback - Solved vs Locked Status Distinction**: Implemented visual distinction with different status pills (Solved in green for author-accepted answers with reopen option, Locked in red for moderator-closed threads) plus interactive tooltip icon (ℹ️) explaining who can reopen each type, eliminating confusion about thread closure authority.
+- **Deduplication System**: Implemented `DuplicatePostFinder` service that detects similar questions during post creation by analyzing title and body text, displaying a "Possible similar threads" panel with links to existing discussions, prompting users to add to existing threads instead of creating duplicates, reducing redundant content across the platform.
+- **Resource Sidebar**: Added static resources panel with essential campus links (Counseling \& Psychological Services, Public Safety, Student Health, Disability Services, etc.) visible throughout the application, providing quick access to critical student support services without leaving the Q\&A platform.
+- **Reporting System**: Integrated user-initiated content flagging via "Flag Content" button on posts, allowing students to report policy violations, with flagged posts appearing in the moderation dashboard (`/moderation/posts`) for staff review, creating a community-driven moderation layer alongside automated AI screening.
+- **Test Login for TAs/Graders**: Added two test login buttons on the login page ("Test as User" and "Test as Moderator") that instantly authenticate as pre-configured accounts (`testuser@columbia.edu` or `testmoderator@columbia.edu`) without requiring Google OAuth setup, allowing TAs to quickly test all features and verify permission boundaries between regular users and moderators, implemented via `TestSessionsController` with full RSpec and Cucumber coverage.
+- **100% Test Coverage**: Achieved 100% line coverage (927/927) and 100% branch coverage (283/283) across both RSpec (414 examples) and Cucumber (48 scenarios, 343 steps) test suites, with comprehensive moderation scenarios covering redaction, security boundaries, and automated OpenAI content screening.
+
 ## Test Suites
 ```bash
 # RSpec unit/request coverage
@@ -146,46 +156,98 @@ bundle exec cucumber
 ```
 
 **RSpec coverage**
-- Line Coverage: 100% (909 / 909) 410 examples, 0 failures
-- Branch Coverage: 100% (279 / 279)
-- `spec/models/post_spec.rb`: validations, taxonomy limits, search helper, expiration logic, and thread-identity callback.
-- `spec/models/answer_spec.rb`: body validations, per-thread identities, reveal logging, and acceptance cleanup.
-- `spec/models/answer_comment_spec.rb`: comment validation + thread delegation to preserve pseudonyms.
-- `spec/models/post_revision_spec.rb` / `spec/models/answer_revision_spec.rb`: ensure revision history entries stay valid.
-- `spec/models/like_spec.rb`: uniqueness constraint plus helper methods for liked?/find_like_by.
-- `spec/models/answer_like_spec.rb`: answer voting model validations, scopes, and helper methods.
-- `spec/models/answer_comment_like_spec.rb`: comment voting model validations, scopes, and helper methods.
-- `spec/requests/answer_likes_spec.rb`: answer upvote/downvote endpoints with toggle behavior.
-- `spec/requests/answer_comment_likes_spec.rb`: comment upvote/downvote endpoints with toggle behavior.
-- `spec/models/user_spec.rb`: anonymous handle helper and OmniAuth linkage for happy/duplicate/new flows.
-- `spec/requests/posts_spec.rb`: global feed filters, create/destroy, reveal identity, expiring threads, `my_threads` route, and AI-flagged post access control.
-- `spec/requests/answers_spec.rb`: CRUD, validation, authorization, identity reveals, edit/revision flows, and accept/reopen flows.
-- `spec/requests/answer_comments_spec.rb`: comment create/delete permissions and flash messaging.
-- `spec/requests/likes_spec.rb`: like/unlike endpoints with authentication guards.
-- `spec/requests/omniauth_callbacks_spec.rb`: Google SSO domain enforcement and account linking.
-- `spec/helpers/application_helper_spec.rb`: `display_author` pseudonym helper.
-- `spec/queries/post_search_query_spec.rb`: text/topic/status/tag/school/course/timeframe/author filters + AI-flagged filtering for moderators.
-- `spec/services/duplicate_post_finder_spec.rb`: verifies the composer's duplicate-detector logic.
-- `spec/models/bookmark_spec.rb`: bookmark associations, validations, uniqueness constraints, and helper methods.
-- `spec/requests/bookmarks_spec.rb`: bookmark/unbookmark endpoints, bookmarked posts listing, and authentication guards.
-- `spec/requests/posts_moderation_actions_spec.rb`: tests for moderator actions like clearing AI flags.
-- `spec/services/redaction_service_spec.rb`: tests for redaction logic and permission checks.
+- **Overall:** 410 examples, 0 failures
+- **Line Coverage:** 100% (909/909)
+- **Branch Coverage:** 100% (279/279)
+
+**Models** (13 specs)
+- `spec/models/post_spec.rb`: validations, taxonomy limits, search helper, expiration logic, thread-identity callback
+- `spec/models/answer_spec.rb`: body validations, per-thread identities, reveal logging, acceptance cleanup
+- `spec/models/answer_comment_spec.rb`: comment validation + thread delegation
+- `spec/models/user_spec.rb`: anonymous handle helper, OmniAuth linkage
+- `spec/models/bookmark_spec.rb`: associations, validations, uniqueness constraints
+- `spec/models/like_spec.rb`, `spec/models/answer_like_spec.rb`, `spec/models/answer_comment_like_spec.rb`: voting models
+- `spec/models/post_revision_spec.rb`, `spec/models/answer_revision_spec.rb`: revision history
+- `spec/models/audit_log_spec.rb`: audit log associations and validations
+- `spec/models/tag_spec.rb`: tag validations and associations
+- `spec/models/thread_identity_spec.rb`: pseudonym generation
+
+**Request Specs - Core Features** (10 specs)
+- `spec/requests/posts_spec.rb`: global feed filters, create/destroy, reveal identity, expiring threads, AI-flagged access
+- `spec/requests/answers_spec.rb`: CRUD, validation, authorization, identity reveals, revisions, accept/reopen
+- `spec/requests/answer_comments_spec.rb`: comment create/delete permissions
+- `spec/requests/bookmarks_spec.rb`: bookmark/unbookmark endpoints, listing
+- `spec/requests/likes_spec.rb`, `spec/requests/answer_likes_spec.rb`, `spec/requests/answer_comment_likes_spec.rb`: voting endpoints
+- `spec/requests/pages_spec.rb`: static pages rendering
+
+**Request Specs - Advanced Features** (5 specs)
+- `spec/requests/school_filter_spec.rb`: school-specific filtering (Columbia/Barnard)
+- `spec/requests/general_school_filter_spec.rb`: "General" posts in both feeds
+- `spec/requests/duplicate_post_blocking_spec.rb`: duplicate detection and confirmation
+- `spec/requests/post_reporting_spec.rb`: user-initiated flagging, moderator dismissal
+- `spec/requests/posts_failures_spec.rb`: database error scenarios
+
+**Request Specs - Moderation** (3 specs)
+- `spec/requests/moderation/posts_spec.rb`: dashboard, redaction/unredaction, access control
+- `spec/requests/moderation/answers_spec.rb`: answer redaction, moderator permissions
+- `spec/requests/posts_moderation_actions_spec.rb`: clearing AI flags, dismissing reports
+
+**Request Specs - Authentication** (2 specs)
+- `spec/requests/omniauth_callbacks_spec.rb`: Google SSO domain enforcement, account linking
+- `spec/requests/test_sessions_spec.rb`: test login endpoints (student/moderator)
+
+**Controllers** (7 specs)
+- `spec/controllers/application_controller_spec.rb`: role-based access control (require_moderator!, require_staff!, require_admin!)
+- `spec/controllers/test_sessions_controller_spec.rb`: test login controller
+- `spec/controllers/pages_controller_spec.rb`: static page actions
+- `spec/controllers/moderation/posts_controller_spec.rb`: moderation controller
+- `spec/controllers/users/omniauth_callbacks_controller_spec.rb`: OAuth callback handling
+- `spec/controllers/answer_likes_controller_spec.rb`, `spec/controllers/answer_comment_likes_controller_spec.rb`: voting controllers
+
+**Services & Queries** (4 specs)
+- `spec/services/redaction_service_spec.rb`: post/answer redaction logic, permissions
+- `spec/services/duplicate_post_finder_spec.rb`: duplicate detection
+- `spec/services/content_safety/openai_client_spec.rb`: OpenAI API integration, error handling
+- `spec/queries/post_search_query_spec.rb`: multi-filter search (text/topic/status/tag/school/course/timeframe/author), AI-flagged filtering
+
+**Background Jobs** (2 specs)
+- `spec/jobs/expire_posts_job_spec.rb`: expired post cleanup
+- `spec/jobs/screen_post_content_job_spec.rb`: AI content screening with OpenAI
+
+**Helpers** (1 spec)
+- `spec/helpers/application_helper_spec.rb`: `display_author` pseudonym helper
 
 **Cucumber scenarios**
-- Latest run: 36 scenarios / 265 steps passing in ~1.5s via `bundle exec cucumber`.
-- Coverage snapshot: line 100% (909/909), branch 100% (279/279) once merged with the RSpec suite. Run `bundle exec cucumber` followed by `open coverage/index.html` to inspect details.
-- Reports publish to https://reports.cucumber.io by default (`CUCUMBER_PUBLISH_ENABLED=true`). Set `CUCUMBER_PUBLISH_QUIET=true` or pass `--publish-quiet` locally to silence the banner.
-- `features/posts/browse_posts.feature`: authenticated browsing, advanced filters, My Threads navigation, blank-search alerts, and guest redirect to the SSO screen.
-- `features/posts/create_post.feature`: signup + creation flow, validation failures, expiring threads, and draft preview UX.
-- `features/answers/add_answer.feature`: answering success + validation errors plus delete permissions for owners vs. non-owners.
-- `features/posts/like_post.feature`: like/unlike toggle with count updates.
-- `features/posts/reveal_identity.feature`: verifies post/answer reveal buttons surface real identities and audit logs.
-- `features/posts/thread_pseudonym.feature`: proves each thread shows a unique pseudonym and never leaks the answerer’s email.
-- `features/posts/accept_answer.feature`: author accepts an answer, thread locks, and reopening restores the composer.
-- `features/auth/google_sign_in.feature`: OmniAuth success path for campus emails and rejection for non-campus addresses.
-- `features/posts/expire_posts_job.feature`: executes `ExpirePostsJob` to remove threads once their expiry window elapses.
-- `features/posts/edit_post.feature`: author edits a thread, saves changes, and sees the revision history.
-- `features/sad_paths.feature`: covers system failures, permission denied scenarios, and moderator action failures.
+- **Overall:** 48 scenarios, 343 steps passing in ~1.9s
+- **Coverage:** 100% line (909/909), 100% branch (279/279) when merged with RSpec
+- **Reports:** Publish to https://reports.cucumber.io by default. Set `CUCUMBER_PUBLISH_QUIET=true` or `--publish-quiet` to silence.
+
+**Posts & Content** (8 features)
+- `features/posts/browse_posts.feature`: browsing, filters, My Threads, blank-search alerts, guest redirect
+- `features/posts/create_post.feature`: signup, creation flow, validation failures, expiring threads
+- `features/posts/edit_post.feature`: editing, revision history
+- `features/posts/like_post.feature`: like/unlike toggle, count updates
+- `features/posts/reveal_identity.feature`: identity reveal buttons, audit logs
+- `features/posts/thread_pseudonym.feature`: unique pseudonyms per thread
+- `features/posts/accept_answer.feature`: accept/lock/reopen threads
+- `features/posts/expire_posts_job.feature`: ExpirePostsJob cleanup
+
+**Answers & Comments** (2 features)
+- `features/answers/add_answer.feature`: answering, validation, delete permissions
+- `features/votes/voting.feature`: upvoting/downvoting answers and comments
+
+**Authentication** (2 features)
+- `features/auth/google_sign_in.feature`: OAuth success/rejection for campus emails
+- `features/auth/test_login.feature`: test login (student/moderator) without OAuth
+
+**Moderation** (2 features)
+- `features/moderation/moderation.feature`: dashboard access, post/answer redaction
+- `features/moderation/security.feature`: access control for regular users
+
+**Static & Error Handling** (2 features)
+- `features/static_pages.feature`: Honor Code, Terms of Service
+- `features/sad_paths.feature`: system failures, permission denied, moderator action failures
+
 
 ### Test Coverage
 
@@ -423,11 +485,6 @@ heroku run rails db:seed --app your-app-name  # Heroku
 - **Multi-tag Search Logic**: Implemented a user-controlled toggle to switch between "Match ANY" (OR) and "Match ALL" (AND) logic when filtering by multiple tags, allowing for both broad discovery and precise searching.
 - **Status Clarity**: Added visual distinction between "Solved" (author accepted an answer) and "Locked" (moderator closed the thread), plus an interactive tooltip icon explaining the difference.
 
-### New Features (from "Remaining Features" list)
-- **Resource Sidebar**: Implemented a static resources panel with essential links (Counseling, Public Safety, etc.).
-- **Reporting System**: Added a "Flag Content" button for user-initiated reporting, integrated with the moderation dashboard.
-- **Deduplication**: Implemented backend logic to detect similar questions during post creation, prompting users with existing answers to reduce duplicates.
-
 ### Deployment Fixes
 - Fixed Heroku deployment by ensuring `db:seed` runs after `db:migrate` to populate tags.
 - Accept answer functionality now works correctly on deployed site.
@@ -446,6 +503,7 @@ CU_Blueboard/
 │   │   ├── answer_likes_controller.rb            # Answer voting (upvote/downvote)
 │   │   ├── answer_comment_likes_controller.rb    # Answer comment voting
 │   │   ├── pages_controller.rb                   # Static pages (Honor Code, Terms)
+│   │   ├── test_sessions_controller.rb           # Test login for TAs/graders (dev/test only)
 │   │   ├── moderation/posts_controller.rb        # Moderation dashboard & redaction
 │   │   ├── moderation/answers_controller.rb      # Answer redaction actions
 │   │   └── users/omniauth_callbacks_controller.rb # Google SSO callback handler
@@ -497,43 +555,74 @@ CU_Blueboard/
 │   └── proposal.txt                    # Iteration proposal document
 ├── features/
 │   ├── answers/add_answer.feature           # Answering and delete permissions
-│   ├── auth/google_sign_in.feature          # Google OAuth flows (success + rejection)
-│   ├── posts/accept_answer.feature          # Accept + lock + reopen threads
-│   ├── posts/browse_posts.feature           # Browse/search feed + My Threads
-│   ├── posts/create_post.feature            # Signup + post creation flow
-│   ├── posts/expire_posts_job.feature       # ExpirePostsJob cleanup scenario
-│   ├── posts/like_post.feature              # Like/unlike toggle flow
-│   ├── posts/reveal_identity.feature        # Identity reveal flows
-│   ├── posts/thread_pseudonym.feature       # Thread-specific pseudonym checks
-│   ├── posts/edit_post.feature              # Post editing + revision history
+│   ├── auth/
+│   │   ├── google_sign_in.feature           # Google OAuth flows (success + rejection)
+│   │   └── test_login.feature               # Test login for TAs/graders
+│   ├── moderation/
+│   │   ├── moderation.feature               # Moderation dashboard & redaction
+│   │   └── security.feature                 # Access control for moderators
+│   ├── posts/
+│   │   ├── accept_answer.feature            # Accept + lock + reopen threads
+│   │   ├── browse_posts.feature             # Browse/search feed + My Threads
+│   │   ├── create_post.feature              # Signup + post creation flow
+│   │   ├── expire_posts_job.feature         # ExpirePostsJob cleanup scenario
+│   │   ├── like_post.feature                # Like/unlike toggle flow
+│   │   ├── reveal_identity.feature          # Identity reveal flows
+│   │   ├── thread_pseudonym.feature         # Thread-specific pseudonym checks
+│   │   └── edit_post.feature                # Post editing + revision history
+│   ├── votes/voting.feature                 # Answer/comment voting
+│   ├── static_pages.feature                 # Honor Code, Terms pages
 │   ├── sad_paths.feature                    # System failures & edge cases
 │   ├── step_definitions/
 │   │   ├── post_steps.rb                    # Shared step implementations
-│   │   └── sad_path_steps.rb                # Sad path step implementations
+│   │   ├── sad_path_steps.rb                # Sad path step implementations
+│   │   ├── moderation_steps.rb              # Moderation action steps
+│   │   ├── navigation_steps.rb              # Navigation helper steps
+│   │   ├── test_login_steps.rb              # Test login step definitions
+│   │   └── voting_steps.rb                  # Voting/upvote/downvote steps
 │   └── support/
 │       ├── env.rb                           # Cucumber+DatabaseCleaner/OmniAuth setup
 │       └── rspec_mocks.rb                   # RSpec mocks integration
 ├── lib/tasks/cucumber.rake             # Rake tasks for Cucumber profiles
 ├── spec/
 │   ├── factories/{users,posts,answers,likes,answer_likes,answer_comment_likes,answer_comments,...}.rb  # FactoryBot fixtures
-│   ├── models/{post,answer,like,answer_like,answer_comment_like,user,answer_comment,...}_spec.rb        # Model specs
-│   ├── requests/{posts,answers,likes,answer_likes,answer_comment_likes,answer_comments,...}_spec.rb      # Request specs
-│   ├── requests/posts_failures_spec.rb                                                          # Post failure scenarios
-│   ├── requests/posts_moderation_actions_spec.rb                                                # Moderator action specs
-│   ├── requests/moderation/{posts,answers}_spec.rb                                              # Moderation request specs
-│   ├── controllers/moderation/posts_controller_spec.rb                                          # Moderation controller specs
-│   ├── controllers/users/omniauth_callbacks_controller_spec.rb                                  # OmniAuth controller specs
-│   ├── controllers/pages_controller_spec.rb                                                     # Pages controller specs
+│   ├── models/{post,answer,like,answer_like,answer_comment_like,user,answer_comment,bookmark,audit_log,tag,thread_identity,...}_spec.rb  # Model specs
+│   ├── requests/
+│   │   ├── posts_spec.rb                                    # Global feed, filters, AI-flagged access
+│   │   ├── answers_spec.rb                                  # CRUD, validation, authorization, revisions
+│   │   ├── answer_comments_spec.rb                          # Comment create/delete permissions
+│   │   ├── likes_spec.rb                                    # Post like/unlike endpoints
+│   │   ├── answer_likes_spec.rb                             # Answer upvote/downvote endpoints
+│   │   ├── answer_comment_likes_spec.rb                     # Comment upvote/downvote endpoints
+│   │   ├── bookmarks_spec.rb                                # Bookmark/unbookmark endpoints
+│   │   ├── omniauth_callbacks_spec.rb                       # Google SSO domain enforcement
+│   │   ├── test_sessions_spec.rb                            # Test login endpoints
+│   │   ├── pages_spec.rb                                    # Static pages rendering
+│   │   ├── posts_moderation_actions_spec.rb                 # Moderator actions (clear AI flags, dismiss reports)
+│   │   ├── posts_failures_spec.rb                           # Post creation/update failure scenarios
+│   │   ├── post_reporting_spec.rb                           # User flagging and moderator dismissal
+│   │   ├── school_filter_spec.rb                            # School-specific filtering
+│   │   ├── general_school_filter_spec.rb                    # General school posts in both feeds
+│   │   ├── duplicate_post_blocking_spec.rb                  # Duplicate detection flows
+│   │   └── moderation/{posts,answers}_spec.rb               # Moderation request specs
+│   ├── controllers/
+│   │   ├── application_controller_spec.rb                   # Role-based access control helpers
+│   │   ├── test_sessions_controller_spec.rb                 # Test login controller
+│   │   ├── answer_likes_controller_spec.rb                  # Answer voting controller
+│   │   ├── answer_comment_likes_controller_spec.rb          # Comment voting controller
+│   │   ├── pages_controller_spec.rb                         # Static page controller
+│   │   ├── moderation/posts_controller_spec.rb              # Moderation controller specs
+│   │   └── users/omniauth_callbacks_controller_spec.rb      # OAuth callback controller
 │   ├── jobs/
-│   │   ├── expire_posts_job_spec.rb                                                              # Expiration job specs
-│   │   └── screen_post_content_job_spec.rb                                                       # OpenAI screening job specs
+│   │   ├── expire_posts_job_spec.rb                         # Post expiration job
+│   │   └── screen_post_content_job_spec.rb                  # OpenAI screening job
 │   ├── services/
-│   │   ├── content_safety/openai_client_spec.rb                                                  # OpenAI API client specs
-│   │   ├── duplicate_post_finder_spec.rb                                                         # Composer duplicate detection
-│   │   └── redaction_service_spec.rb                                                             # Redaction service specs
-│   ├── helpers/application_helper_spec.rb                                                        # Helper method specs
-│   ├── queries/post_search_query_spec.rb                                                         # Search service specs
-│   └── rails_helper.rb                                                                           # RSpec + Devise/Test helpers config
+│   │   ├── content_safety/openai_client_spec.rb             # OpenAI API client specs
+│   │   ├── duplicate_post_finder_spec.rb                    # Duplicate detection service
+│   │   └── redaction_service_spec.rb                        # Redaction service specs
+│   ├── helpers/application_helper_spec.rb                   # Display author pseudonym helper
+│   ├── queries/post_search_query_spec.rb                    # Search service specs
+│   └── rails_helper.rb                                      # RSpec + Devise/Test helpers config
 ├── simplecov_setup.rb                 # SimpleCov configuration
 ├── coverage/index.html                # Coverage report (generated by running tests, not in git)
 ├── test/application_system_test_case.rb # Stub system test base class (no tests)
