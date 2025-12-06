@@ -19,6 +19,7 @@ After do
 end
 
 Before do
+  Capybara.reset_sessions!
   Warden.test_reset!
   TaxonomySeeder.seed!
 end
@@ -32,6 +33,18 @@ After('@omniauth') do
   OmniAuth.config.mock_auth[:google_oauth2] = nil
   Rails.application.env_config['devise.mapping'] = nil
   Rails.application.env_config['omniauth.auth'] = nil
+end
+
+Before('@coverage_db_truncation') do
+  cleaner = DatabaseCleaner[:active_record]
+  @previous_db_strategy = cleaner.strategy
+  cleaner.strategy = :truncation
+  cleaner.clean_with(:truncation)
+end
+
+After('@coverage_db_truncation') do
+  cleaner = DatabaseCleaner[:active_record]
+  cleaner.strategy = @previous_db_strategy || :transaction
 end
 
 # By default, any exception happening in your Rails application will bubble up
@@ -54,7 +67,7 @@ ActionController::Base.allow_rescue = false
 # Remove/comment out the lines below if your app doesn't have a database.
 # For some databases (like MongoDB and CouchDB) you may need to use :truncation instead.
 begin
-  DatabaseCleaner.strategy = :transaction
+  DatabaseCleaner[:active_record].strategy = :transaction
 rescue NameError
   raise "You need to add database_cleaner to your Gemfile (in the :test group) if you wish to use it."
 end
