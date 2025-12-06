@@ -1,8 +1,9 @@
 class PostsController < ApplicationController
-  before_action :set_post, only: [ :show, :edit, :update, :destroy, :reveal_identity, :hide_identity, :unlock, :appeal, :bookmark, :unbookmark ]
+  before_action :set_post, only: [ :show, :edit, :update, :destroy, :reveal_identity, :hide_identity, :unlock, :appeal, :bookmark, :unbookmark, :report, :dismiss_flag, :clear_ai_flag ]
   before_action :ensure_active_post, only: [ :show, :reveal_identity ]
   before_action :authorize_owner!, only: [ :edit, :update, :destroy, :unlock ]
-  before_action :load_taxonomies, only: [ :new, :create, :preview, :index, :my_threads, :bookmarked, :edit, :update ]
+  skip_before_action :authorize_owner!, only: [ :dismiss_flag, :clear_ai_flag ]
+  before_action :load_taxonomies, only: [ :new, :create, :index, :my_threads, :bookmarked, :edit, :update ]
 
   # GET /posts
   def index
@@ -67,21 +68,20 @@ class PostsController < ApplicationController
     assign_duplicate_posts(@post)
   end
 
-  def preview
-    @post = current_user.posts.new(post_params)
-    @show_preview = true
-    assign_duplicate_posts(@post)
-    render :new, status: :ok
-  end
-
   # POST /posts
   def create
     @post = current_user.posts.new(post_params)
+    assign_duplicate_posts(@post)
+
+    if @duplicate_posts.present? && params[:confirm_duplicate] != 'true'
+      flash.now[:alert] = 'Potential duplicate threads found. Please review them before posting.'
+      render :new, status: :unprocessable_content
+      return
+    end
 
     if @post.save
       redirect_to posts_path, notice: 'Post was successfully created!'
     else
-      assign_duplicate_posts(@post)
       render :new, status: :unprocessable_content
     end
   end
@@ -164,6 +164,50 @@ class PostsController < ApplicationController
     end
   end
 
+  def report
+    if @post.update(reported: true, reported_at: Time.current, reported_reason: 'User flagged')
+      session[:reported_post_ids] ||= []
+      session[:reported_post_ids] << @post.id
+      redirect_to @post, notice: 'Content flagged for moderator review.'
+    else
+      redirect_to @post, alert: 'Unable to flag content.'
+    end
+  end
+
+  def dismiss_flag
+    session[:reported_post_ids] ||= []
+
+    if current_user.can_moderate?
+      if @post.update(reported: false, reported_at: nil, reported_reason: nil)
+        redirect_to @post, notice: 'Flag dismissed.'
+      else
+        redirect_to @post, alert: 'Unable to dismiss flag.'
+      end
+    elsif session[:reported_post_ids].include?(@post.id)
+      if @post.update(reported: false, reported_at: nil, reported_reason: nil)
+        session[:reported_post_ids].delete(@post.id)
+        redirect_to @post, notice: 'Flag removed.'
+      else
+        redirect_to @post, alert: 'Unable to remove flag.'
+      end
+    else
+      redirect_to @post, alert: 'You cannot unflag this post.'
+    end
+  end
+
+  def clear_ai_flag
+    unless current_user.can_moderate?
+      redirect_to @post, alert: 'Permission denied.'
+      return
+    end
+
+    if @post.update(ai_flagged: false)
+      redirect_to @post, notice: 'AI flag cleared.'
+    else
+      redirect_to @post, alert: 'Unable to clear AI flag.'
+    end
+  end
+
   private
 
   def set_post
@@ -194,7 +238,7 @@ class PostsController < ApplicationController
   def filter_params
     return {} unless params[:filters].present?
 
-    permitted = params.require(:filters).permit(:q, :topic_id, :status, :school, :course_code, :timeframe, tag_ids: [])
+    permitted = params.require(:filters).permit(:q, :topic_id, :status, :school, :course_code, :timeframe, :tag_match, tag_ids: [])
     permitted[:tag_ids] = Array(permitted[:tag_ids]).reject(&:blank?)
     permitted.to_h.with_indifferent_access
   end
@@ -207,7 +251,7 @@ class PostsController < ApplicationController
 
   def build_filter_form
     @filter_form = filter_params.presence || {}.with_indifferent_access
-    flash.now[:alert] = 'Please enter text to search.' if blank_search_requested?
+    flash.now[:alert] = 'Please enter text to search or choose a filter.' if blank_search_requested?
   end
 
   def authorize_owner!
@@ -235,6 +279,7 @@ class PostsController < ApplicationController
     other_blank = Array(@filter_form[:tag_ids]).reject(&:blank?).empty? &&
                   @filter_form[:topic_id].blank? &&
                   @filter_form[:status].blank? &&
+                  @filter_form[:school].blank? &&
                   @filter_form[:course_code].blank? &&
                   @filter_form[:timeframe].blank?
 

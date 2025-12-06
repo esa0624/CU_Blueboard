@@ -15,6 +15,11 @@ module Moderation
       @ai_flagged_posts = Post.where(ai_flagged: true, redaction_state: 'visible')
                               .includes(:user, :redacted_by)
                               .order(updated_at: :desc)
+
+      # User-reported posts
+      @reported_posts = Post.where(reported: true, redaction_state: 'visible')
+                        .includes(:user)
+                        .order(reported_at: :desc)
     end
 
     # GET /moderation/posts/:id

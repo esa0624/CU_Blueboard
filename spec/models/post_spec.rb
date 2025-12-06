@@ -24,10 +24,9 @@ RSpec.describe Post, type: :model do
     expect(post.errors[:topic]).to include("can't be blank")
   end
 
-  it 'is invalid without a school' do
+  it 'is valid without a school' do
     post = build(:post, school: nil)
-    expect(post).not_to be_valid
-    expect(post.errors[:school]).to include("can't be blank")
+    expect(post).to be_valid
   end
 
   it 'is invalid with an invalid school' do
@@ -161,6 +160,11 @@ RSpec.describe Post, type: :model do
 
     it 'returns false for nil user' do
       expect(post_record.voted_by?(nil)).to be false
+    end
+
+    it 'crashes if user object is incompatible (no id and no [])' do
+      incompatible_user = Object.new
+      expect { post_record.voted_by?(incompatible_user) }.to raise_error(NoMethodError)
     end
   end
 

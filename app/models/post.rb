@@ -20,6 +20,7 @@ class Post < ApplicationRecord
 
   after_create :ensure_thread_identity
   after_create_commit :screen_content_async
+
   scope :active, -> { where('expires_at IS NULL OR expires_at > ?', Time.current) }
   scope :ai_flagged, -> { where(ai_flagged: true) }
 
@@ -31,7 +32,7 @@ class Post < ApplicationRecord
   }.freeze
   TAG_LIMIT = 5
   MIN_TAGS = 1
-  SCHOOLS = [ 'Columbia', 'Barnard' ].freeze
+  SCHOOLS = [ 'Columbia', 'Barnard', 'General' ].freeze
   REDACTION_STATES = {
     visible: 'visible',
     partial: 'partial',
@@ -44,7 +45,7 @@ class Post < ApplicationRecord
   validates :body, presence: true
   validates :topic, presence: true
   validates :status, presence: true, inclusion: { in: STATUSES.values }
-  validates :school, presence: true, inclusion: { in: SCHOOLS }
+  validates :school, inclusion: { in: SCHOOLS }, allow_nil: true
 
   validate :expires_at_within_window
   validate :accepted_answer_belongs_to_post

@@ -1,21 +1,44 @@
 require 'rails_helper'
 
 RSpec.describe DuplicatePostFinder do
-  it "returns posts that share similar titles" do
-    matching = create(:post, title: 'Visa renewal checklist')
-    create(:post, title: 'Dorm cooking tips')
+  let!(:existing_post) { create(:post, title: 'Existing Post', body: 'Existing body content') }
 
-    results = described_class.new(title: 'visa renewal', body: '', exclude_id: nil).call
+  describe '#call' do
+    it 'returns empty relation if title and body are blank' do
+      finder = described_class.new(title: '', body: '')
+      expect(finder.call).to be_empty
+    end
 
-    expect(results).to include(matching)
-    expect(results.count).to eq(1)
-  end
+    it 'finds exact title match' do
+      finder = described_class.new(title: 'Existing Post', body: 'Different body')
+      expect(finder.call).to include(existing_post)
+    end
 
-  it "excludes a provided post id" do
-    post = create(:post, title: 'My roommate search')
+    it 'finds body snippet match' do
+      finder = described_class.new(title: 'Different Title', body: 'Existing body content')
+      expect(finder.call).to include(existing_post)
+    end
 
-    results = described_class.new(title: post.title, body: '', exclude_id: post.id).call
+    it 'finds keyword match' do
+      # "Existing" is > 3 chars
+      finder = described_class.new(title: 'Existing Stuff', body: 'Different body')
+      expect(finder.call).to include(existing_post)
+    end
 
-    expect(results).to be_empty
+    it 'handles short titles (no keyword extraction)' do
+      finder = described_class.new(title: 'Hi', body: 'Existing body content')
+      expect(finder.call).to include(existing_post)
+    end
+
+    it 'excludes specified id' do
+      finder = described_class.new(title: 'Existing Post', body: 'Existing body content', exclude_id: existing_post.id)
+      expect(finder.call).not_to include(existing_post)
+    end
+
+    it 'limits results' do
+      create_list(:post, 6, title: 'Existing Post')
+      finder = described_class.new(title: 'Existing Post', body: '')
+      expect(finder.call.count).to eq(5)
+    end
   end
 end

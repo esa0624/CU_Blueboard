@@ -10,6 +10,7 @@
   <% end %>
 
   <% if defined?(@duplicate_posts) && @duplicate_posts.present? %>
+    <%= hidden_field_tag :confirm_duplicate, true %>
     <div class="duplicate-warning">
       <h3>Possible similar threads</h3>
       <ul>
@@ -56,12 +57,18 @@
     <%= form.label :tag_ids, "Tags", class: "form-label" %>
     <div class="tag-picker">
       <%= hidden_field_tag 'post[tag_ids][]', '' %>
-      <% @tags.each do |tag| %>
-        <% checkbox_id = "post_tag_#{tag.id}" %>
-        <label class="tag-chip" for="<%= checkbox_id %>">
-          <%= check_box_tag 'post[tag_ids][]', tag.id, post.tag_ids.include?(tag.id), id: checkbox_id, data: { tag_picker_target: 'input', action: 'tag-picker#toggle' } %>
-          <span><%= tag.name %></span>
-        </label>
+      <% if @tags.any? %>
+        <% @tags.each do |tag| %>
+          <% checkbox_id = "post_tag_#{tag.id}" %>
+          <label class="tag-chip" for="<%= checkbox_id %>">
+            <%= check_box_tag 'post[tag_ids][]', tag.id, post.tag_ids.include?(tag.id), id: checkbox_id, data: { tag_picker_target: 'input', action: 'tag-picker#toggle' } %>
+            <span><%= tag.name %></span>
+          </label>
+        <% end %>
+      <% else %>
+        <div class="alert alert-danger">
+          <strong>System Error:</strong> No tags found. Please run <code>rails db:seed</code> to populate tags.
+        </div>
       <% end %>
     </div>
     <small class="form-hint">Choose between <%= Post::MIN_TAGS %> and <%= Post::TAG_LIMIT %> tags.</small>
@@ -95,14 +102,7 @@
   </div>
 
   <div class="form-actions">
-    <% if post.new_record? %>
-      <%= button_tag "Preview Draft",
-            type: 'submit',
-            class: 'form-secondary-button',
-            formaction: preview_posts_path,
-            formmethod: :post,
-            formnovalidate: true %>
-    <% end %>
+
     <%= form.submit submit_label, class: "form-submit-button" %>
     <%= link_to "Cancel", posts_path, 
             class: "form-cancel-button",

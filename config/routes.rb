@@ -41,9 +41,11 @@ Rails.application.routes.draw do
       post :appeal
       post :bookmark
       delete :unbookmark
+      post :report
+      delete :dismiss_flag
+      patch :clear_ai_flag
     end
     collection do
-      post :preview
       get :my_threads
       get :bookmarked
     end

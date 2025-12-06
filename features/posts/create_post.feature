@@ -27,15 +27,9 @@ Feature: Ask a new question
     And I open the post titled "Temporary tips"
     Then I should see "Expires" on the page
 
-  Scenario: Author previews a draft before posting
-    Given I register with email "previewer@example.com" and password "Password123!"
-    When I preview a post titled "Need advice" with body "Does anyone recommend a fall elective?"
-    Then I should see "Draft Preview"
-    And I should see "Does anyone recommend a fall elective?" on the page
-
   Scenario: Composer surfaces similar threads before posting
     Given a post titled "Visa renewal tips" exists
     And I register with email "duplicate@example.com" and password "Password123!"
-    When I preview a post titled "Visa renewal tips" with body "Any recent ISSO advice?"
+    When I create a post titled "Visa renewal tips" with body "Any recent ISSO advice?"
     Then I should see "Possible similar threads"
     And I should see "Visa renewal tips" on the page

@@ -62,10 +62,19 @@ class PostSearchQuery
     tag_ids = Array(filters[:tag_ids]).reject(&:blank?)
     return scope if tag_ids.empty?
 
-    scope.joins(:post_tags)
-         .where(post_tags: { tag_id: tag_ids })
-         .group('posts.id')
-         .having('COUNT(DISTINCT post_tags.tag_id) = ?', tag_ids.size)
+    match_type = filters[:tag_match].presence || 'all'
+
+    if match_type == 'any'
+      scope.joins(:post_tags)
+           .where(post_tags: { tag_id: tag_ids })
+           .distinct
+    else
+      # Default to 'all' (AND logic)
+      scope.joins(:post_tags)
+           .where(post_tags: { tag_id: tag_ids })
+           .group('posts.id')
+           .having('COUNT(DISTINCT post_tags.tag_id) = ?', tag_ids.size)
+    end
   end
 
   def apply_status(scope)

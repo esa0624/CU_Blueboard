@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_02_032806) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_02_120000) do
   create_table "answer_comment_likes", force: :cascade do |t|
     t.integer "answer_comment_id", null: false
     t.datetime "created_at", null: false
@@ -139,6 +139,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_02_032806) do
     t.integer "redacted_by_id"
     t.string "redacted_reason"
     t.string "redaction_state", default: "visible", null: false
+    t.boolean "reported", default: false, null: false
+    t.datetime "reported_at"
+    t.string "reported_reason"
     t.string "school"
     t.datetime "screened_at"
     t.boolean "show_real_identity", default: false, null: false

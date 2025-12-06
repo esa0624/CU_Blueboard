@@ -9,6 +9,16 @@ RSpec.describe Moderation::PostsController, type: :controller do
   end
 
   describe '#index' do
+    context 'as a regular user' do
+      before { sign_in create(:user) }
+
+      it 'redirects to root' do
+        get :index
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq('Access denied. Moderator privileges required.')
+      end
+    end
+
     it 'handles sources that do not support pagination helpers' do
       redacted_posts = [ create(:post, redaction_state: :redacted, redacted_body: 'Hidden content') ]
       ai_flagged_posts = [ create(:post, ai_flagged: true) ]
@@ -27,6 +37,13 @@ RSpec.describe Moderation::PostsController, type: :controller do
       allow(ai_flagged_relation).to receive(:includes).with(:user, :redacted_by).and_return(ai_flagged_relation)
       allow(ai_flagged_relation).to receive(:order).with(updated_at: :desc).and_return(ai_flagged_posts)
       allow(ai_flagged_posts).to receive(:respond_to?).with(:page).and_return(false)
+
+      # Mock for User-reported posts
+      reported_relation = instance_double(ActiveRecord::Relation)
+      reported_posts = []
+      allow(Post).to receive(:where).with(reported: true, redaction_state: 'visible').and_return(reported_relation)
+      allow(reported_relation).to receive(:includes).with(:user).and_return(reported_relation)
+      allow(reported_relation).to receive(:order).with(reported_at: :desc).and_return(reported_posts)
 
       get :index
 

@@ -146,8 +146,8 @@ bundle exec cucumber
 ```
 
 **RSpec coverage**
-- Line Coverage: 100% (873 / 873) 353 examples, 0 failures
-- Branch Coverage: 100% (257 / 257)
+- Line Coverage: 100% (909 / 909) 410 examples, 0 failures
+- Branch Coverage: 100% (279 / 279)
 - `spec/models/post_spec.rb`: validations, taxonomy limits, search helper, expiration logic, and thread-identity callback.
 - `spec/models/answer_spec.rb`: body validations, per-thread identities, reveal logging, and acceptance cleanup.
 - `spec/models/answer_comment_spec.rb`: comment validation + thread delegation to preserve pseudonyms.
@@ -168,10 +168,12 @@ bundle exec cucumber
 - `spec/services/duplicate_post_finder_spec.rb`: verifies the composer's duplicate-detector logic.
 - `spec/models/bookmark_spec.rb`: bookmark associations, validations, uniqueness constraints, and helper methods.
 - `spec/requests/bookmarks_spec.rb`: bookmark/unbookmark endpoints, bookmarked posts listing, and authentication guards.
+- `spec/requests/posts_moderation_actions_spec.rb`: tests for moderator actions like clearing AI flags.
+- `spec/services/redaction_service_spec.rb`: tests for redaction logic and permission checks.
 
 **Cucumber scenarios**
-- Latest run: 29 scenarios / 202 steps passing in ~1.1s via `bundle exec cucumber`.
-- Coverage snapshot: line 100% (873/873), branch 100% (257/257) once merged with the RSpec suite. Run `bundle exec cucumber` followed by `open coverage/index.html` to inspect details.
+- Latest run: 36 scenarios / 265 steps passing in ~1.5s via `bundle exec cucumber`.
+- Coverage snapshot: line 100% (909/909), branch 100% (279/279) once merged with the RSpec suite. Run `bundle exec cucumber` followed by `open coverage/index.html` to inspect details.
 - Reports publish to https://reports.cucumber.io by default (`CUCUMBER_PUBLISH_ENABLED=true`). Set `CUCUMBER_PUBLISH_QUIET=true` or pass `--publish-quiet` locally to silence the banner.
 - `features/posts/browse_posts.feature`: authenticated browsing, advanced filters, My Threads navigation, blank-search alerts, and guest redirect to the SSO screen.
 - `features/posts/create_post.feature`: signup + creation flow, validation failures, expiring threads, and draft preview UX.
@@ -183,6 +185,7 @@ bundle exec cucumber
 - `features/auth/google_sign_in.feature`: OmniAuth success path for campus emails and rejection for non-campus addresses.
 - `features/posts/expire_posts_job.feature`: executes `ExpirePostsJob` to remove threads once their expiry window elapses.
 - `features/posts/edit_post.feature`: author edits a thread, saves changes, and sees the revision history.
+- `features/sad_paths.feature`: covers system failures, permission denied scenarios, and moderator action failures.
 
 ### Test Coverage
 
@@ -415,10 +418,15 @@ heroku run rails db:seed --app your-app-name  # Heroku
 - **Missing tags on Heroku**: Emphasized `rails db:seed` requirement in deployment guide - this creates the required topics and tags.
 - **Credentials setup**: Added `example.env` with all environment variables and clear fallback system (ENV first, Rails credentials second).
 
-### Feature Clarifications
-- **Solved vs Locked**: When an author accepts an answer, the thread is marked "solved" AND "locked" (no new answers). Authors can reopen if needed.
-- **Multi-tag filtering**: Currently uses OR logic (posts matching ANY selected tag). This prioritizes discovery over precision.
-- **School filter**: Posts without a school selection won't appear in school-filtered results. The filter shows posts explicitly tagged with that school.
+### Critical Bug Fixes & UX Refinements
+- **School Filter Logic**: Addressed the issue where posts with unspecified schools would disappear during filtering. Logic now ensures "General" posts are handled correctly, and specific school filters (Columbia vs. Barnard) work as expected.
+- **Multi-tag Search Logic**: Implemented a user-controlled toggle to switch between "Match ANY" (OR) and "Match ALL" (AND) logic when filtering by multiple tags, allowing for both broad discovery and precise searching.
+- **Status Clarity**: Added visual distinction between "Solved" (author accepted an answer) and "Locked" (moderator closed the thread), plus an interactive tooltip icon explaining the difference.
+
+### New Features (from "Remaining Features" list)
+- **Resource Sidebar**: Implemented a static resources panel with essential links (Counseling, Public Safety, etc.).
+- **Reporting System**: Added a "Flag Content" button for user-initiated reporting, integrated with the moderation dashboard.
+- **Deduplication**: Implemented backend logic to detect similar questions during post creation, prompting users with existing answers to reduce duplicates.
 
 ### Deployment Fixes
 - Fixed Heroku deployment by ensuring `db:seed` runs after `db:migrate` to populate tags.
@@ -437,6 +445,7 @@ CU_Blueboard/
 │   │   ├── likes_controller.rb                   # Like toggle endpoints
 │   │   ├── answer_likes_controller.rb            # Answer voting (upvote/downvote)
 │   │   ├── answer_comment_likes_controller.rb    # Answer comment voting
+│   │   ├── pages_controller.rb                   # Static pages (Honor Code, Terms)
 │   │   ├── moderation/posts_controller.rb        # Moderation dashboard & redaction
 │   │   ├── moderation/answers_controller.rb      # Answer redaction actions
 │   │   └── users/omniauth_callbacks_controller.rb # Google SSO callback handler
@@ -497,15 +506,24 @@ CU_Blueboard/
 │   ├── posts/reveal_identity.feature        # Identity reveal flows
 │   ├── posts/thread_pseudonym.feature       # Thread-specific pseudonym checks
 │   ├── posts/edit_post.feature              # Post editing + revision history
-│   ├── step_definitions/post_steps.rb       # Shared step implementations
-│   └── support/env.rb                       # Cucumber+DatabaseCleaner/OmniAuth setup
+│   ├── sad_paths.feature                    # System failures & edge cases
+│   ├── step_definitions/
+│   │   ├── post_steps.rb                    # Shared step implementations
+│   │   └── sad_path_steps.rb                # Sad path step implementations
+│   └── support/
+│       ├── env.rb                           # Cucumber+DatabaseCleaner/OmniAuth setup
+│       └── rspec_mocks.rb                   # RSpec mocks integration
 ├── lib/tasks/cucumber.rake             # Rake tasks for Cucumber profiles
 ├── spec/
 │   ├── factories/{users,posts,answers,likes,answer_likes,answer_comment_likes,answer_comments,...}.rb  # FactoryBot fixtures
 │   ├── models/{post,answer,like,answer_like,answer_comment_like,user,answer_comment,...}_spec.rb        # Model specs
 │   ├── requests/{posts,answers,likes,answer_likes,answer_comment_likes,answer_comments,...}_spec.rb      # Request specs
+│   ├── requests/posts_failures_spec.rb                                                          # Post failure scenarios
+│   ├── requests/posts_moderation_actions_spec.rb                                                # Moderator action specs
 │   ├── requests/moderation/{posts,answers}_spec.rb                                              # Moderation request specs
 │   ├── controllers/moderation/posts_controller_spec.rb                                          # Moderation controller specs
+│   ├── controllers/users/omniauth_callbacks_controller_spec.rb                                  # OmniAuth controller specs
+│   ├── controllers/pages_controller_spec.rb                                                     # Pages controller specs
 │   ├── jobs/
 │   │   ├── expire_posts_job_spec.rb                                                              # Expiration job specs
 │   │   └── screen_post_content_job_spec.rb                                                       # OpenAI screening job specs

@@ -201,20 +201,20 @@ end
 
 When('I like the post') do
   # Find and click the upvote button
-  within('.vote-controls') do
+  within('.vote-controls-inline') do
     all('.btn-upvote').first.click
   end
 end
 
 Then('the post like count should be {int}') do |count|
-  within('.vote-score') do
+  within('.vote-score-inline') do
     expect(page).to have_content(count.to_s)
   end
 end
 
 When('I unlike the post') do
   # Click upvote again to toggle it off
-  within('.vote-controls') do
+  within('.vote-controls-inline') do
     all('.btn-upvote').first.click
   end
 end
@@ -255,7 +255,7 @@ end
 When('I edit the post titled {string} to have body {string}') do |title, new_body|
   post = Post.find_by!(title: title)
   visit Rails.application.routes.url_helpers.post_path(post)
-  click_link 'Edit Post'
+  click_link 'Edit'
   fill_in 'Title', with: title
   fill_in 'Content', with: new_body
   select post.topic.name, from: 'Topic'

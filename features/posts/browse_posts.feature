@@ -28,7 +28,7 @@ Feature: Browse campus conversations
     Given a user exists with email "blanksearch@example.com" and password "Password123!"
     And I sign in with email "blanksearch@example.com" and password "Password123!"
     When I submit an empty search
-    Then I should see the alert "Please enter text to search."
+    Then I should see the alert "Please enter text to search or choose a filter."
 
   Scenario: Guest visitors are asked to log in first
     When I visit the home page

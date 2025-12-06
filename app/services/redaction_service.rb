@@ -194,8 +194,6 @@ class RedactionService
       '[Content removed by CU moderators for policy violations]'
     when :partial
       '[Portions of this content have been redacted by CU moderators]'
-    else
-      ''
     end
   end
 end

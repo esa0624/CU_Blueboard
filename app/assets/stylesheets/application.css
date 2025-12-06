@@ -559,21 +559,7 @@ body {
   cursor: default;
 }
 
-.preview-panel {
-  background-color: #F4F7FB;
-  border: 1px solid #E0EAFD;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 24px;
-}
 
-.preview-body {
-  background: #fff;
-  border-radius: 6px;
-  padding: 16px;
-  border: 1px solid #E0E7F1;
-  margin-top: 12px;
-}
 
 .status-pill {
   display: inline-flex;
@@ -995,4 +981,63 @@ body {
   background: linear-gradient(135deg, #c82333 0%, #8b1722 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(220, 53, 69, 0.35);
+}
+
+/* ======================================= */
+/* 13. Status Help Icon & Tooltip          */
+/* ======================================= */
+.status-help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  color: #6c757d;
+  cursor: help;
+  position: relative;
+  vertical-align: middle;
+  opacity: 0.7;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.status-help-icon:hover {
+  opacity: 1;
+  color: #004B8D;
+}
+
+/* Tooltip Body */
+.status-help-icon[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: normal; /* Allow text wrapping */
+  width: max-content;
+  max-width: 220px;
+  z-index: 1000;
+  margin-bottom: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  font-weight: normal;
+  line-height: 1.4;
+  text-align: center;
+  pointer-events: none; /* Prevent tooltip from blocking interaction */
+}
+
+/* Tooltip Arrow */
+.status-help-icon[data-tooltip]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #333;
+  margin-bottom: -2px;
+  z-index: 1000;
+  pointer-events: none;
 }

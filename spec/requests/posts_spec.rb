@@ -26,7 +26,7 @@ RSpec.describe "Posts", type: :request do
 
       get posts_path, params: { filters: { q: '' } }
 
-      expect(response.body).to include('Please enter text to search.')
+      expect(response.body).to include('Please enter text to search or choose a filter.')
       expect(response.body).to include('Post List')
     end
   end
@@ -265,30 +265,7 @@ RSpec.describe "Posts", type: :request do
     end
   end
 
-  describe "POST /posts/preview" do
-    let(:user) { create(:user) }
-    let(:topic) { create(:topic) }
-    let(:tag) { create(:tag) }
 
-    it "renders the new template with preview content" do
-      sign_in user
-
-      post preview_posts_path, params: {
-        post: {
-          title: 'Preview title',
-          body: 'Preview body',
-          topic_id: topic.id,
-          tag_ids: [ tag.id ],
-          school: Post::SCHOOLS.first,
-          course_code: 'COMS W4995'
-        }
-      }
-
-      expect(response).to have_http_status(:ok)
-      expect(response.body).to include('Draft Preview')
-      expect(response.body).to include('Preview title')
-    end
-  end
 
   describe "GET /posts/:id" do
     let!(:post_record) { create(:post, :expiring_soon) }

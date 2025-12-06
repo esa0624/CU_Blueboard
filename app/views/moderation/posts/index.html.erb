@@ -67,6 +67,63 @@
 
   <hr class="section-divider">
 
+  <%# User-Reported Posts Section %>
+  <% reported_total = @reported_posts.respond_to?(:total_count) ? @reported_posts.total_count : @reported_posts.size %>
+  <h3 class="comments-title">User-Reported Posts (<%= reported_total %>)</h3>
+  <p class="post-meta">Posts flagged by users for review</p>
+
+  <% if @reported_posts.any? %>
+    <div class="moderation-grid">
+      <% @reported_posts.each do |post| %>
+        <div class="post-card ai-flagged-card" style="border-color: #17a2b8; background-color: #f0f8ff;">
+          <div class="post-card-header">
+            <h3 class="post-title">
+              <%= link_to post.title, post_path(post) %>
+            </h3>
+            <div class="status-badges">
+              <span class="post-card-status" style="background-color: #17a2b8; color: white;">
+                User Reported
+              </span>
+            </div>
+          </div>
+
+          <div class="post-card-meta">
+            <span class="meta-chip">
+              Author: <%= post.user.email %>
+            </span>
+            <span class="meta-chip">
+              Reported: <%= time_ago_in_words(post.reported_at || post.updated_at) %> ago
+            </span>
+            <span class="meta-chip">
+              Reason: <%= post.reported_reason %>
+            </span>
+          </div>
+
+          <div class="post-card-actions">
+            <%= link_to "Review", post_path(post), class: "mod-btn mod-btn-review" %>
+            <%= button_to "Redact",
+                          redact_moderation_post_path(post),
+                          method: :patch,
+                          params: { reason: 'policy_violation', state: 'redacted' },
+                          class: "mod-btn mod-btn-redact",
+                          data: { turbo_confirm: "Redact this reported post?" } %>
+            <%= button_to "Dismiss",
+                          dismiss_flag_post_path(post),
+                          method: :delete,
+                          class: "mod-btn mod-btn-approve",
+                          data: { turbo_confirm: "Dismiss report?" } %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="empty-state">
+      <p>No user reports pending.</p>
+    </div>
+  <% end %>
+
+  <hr class="section-divider">
+
   <%# AI-Flagged Posts Section %>
   <% ai_flagged_total = @ai_flagged_posts.respond_to?(:total_count) ? @ai_flagged_posts.total_count : @ai_flagged_posts.size %>
   <h3 class="comments-title">AI-Flagged Posts (<%= ai_flagged_total %>)</h3>
@@ -127,9 +184,8 @@
                           class: "mod-btn mod-btn-redact",
                           data: { turbo_confirm: "Redact this AI-flagged post?" } %>
             <%= button_to "Approve",
-                          post_path(post),
+                          clear_ai_flag_post_path(post),
                           method: :patch,
-                          params: { post: { ai_flagged: false } },
                           class: "mod-btn mod-btn-approve",
                           data: { turbo_confirm: "Clear AI flag and approve this post?" } %>
           </div>

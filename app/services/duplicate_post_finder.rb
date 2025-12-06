@@ -20,17 +20,37 @@ class DuplicatePostFinder
 
   attr_reader :title, :body, :exclude_id
 
+  def search_terms
+    terms = []
+    # Exact title match (high priority)
+    terms << "%#{title.downcase}%" if title.present?
+
+    # Body snippet match
+    terms << "%#{body.downcase[0, 120]}%" if body.present?
+
+    # Keyword matching from title (if title is long enough)
+    if title.present? && title.length > 10
+      keywords = title.downcase.split(/\s+/).select { |w| w.length > 3 }
+      keywords.each do |keyword|
+        terms << "%#{keyword}%"
+      end
+    end
+
+    terms
+  end
+
   def search_clause
     clauses = []
     clauses << 'LOWER(title) LIKE ?' if title.present?
     clauses << 'LOWER(body) LIKE ?' if body.present?
-    clauses.join(' OR ')
-  end
 
-  def search_terms
-    terms = []
-    terms << "%#{title.downcase}%" if title.present?
-    terms << "%#{body.downcase[0, 120]}%" if body.present?
-    terms
+    if title.present? && title.length > 10
+      keywords = title.downcase.split(/\s+/).select { |w| w.length > 3 }
+      keywords.each do |_|
+        clauses << 'LOWER(title) LIKE ?'
+      end
+    end
+
+    clauses.join(' OR ')
   end
 end

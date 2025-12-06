@@ -1,53 +1,62 @@
 require 'rails_helper'
 
 RSpec.describe ApplicationHelper, type: :helper do
+  let(:user) { create(:user) }
+  let(:other_user) { create(:user) }
+  let(:post_record) { create(:post, user: user) }
+
   describe '#display_author' do
-    let(:post_record) { create(:post) }
-
-    before do
-      allow(helper).to receive(:current_user).and_return(current_user)
+    context 'when user is nil' do
+      it 'returns Anonymous Student' do
+        expect(helper.display_author(nil)).to eq('Anonymous Student')
+      end
     end
 
-    let(:current_user) { nil }
+    context 'when real identity is revealed' do
+      before { post_record.update(show_real_identity: true) }
 
-    it 'returns "Anonymous Student" when user is nil' do
-      expect(helper.display_author(nil)).to eq('Anonymous Student')
+      it 'returns email' do
+        expect(helper.display_author(user, context: post_record)).to eq(user.email)
+      end
     end
 
-    it 'returns "You" when the viewer owns the record' do
-      allow(helper).to receive(:current_user).and_return(post_record.user)
+    context 'when user is current user' do
+      before { allow(helper).to receive(:current_user).and_return(user) }
 
-      expect(helper.display_author(post_record.user, context: post_record)).to eq('You')
+      it 'returns You' do
+        expect(helper.display_author(user, context: post_record)).to eq('You')
+      end
     end
 
-    it 'falls back to global anonymous handle when no context is provided' do
-      user = create(:user)
+    context 'when user is not current user' do
+      before { allow(helper).to receive(:current_user).and_return(other_user) }
 
-      expect(helper.display_author(user)).to eq(user.anonymous_handle)
+      it 'returns pseudonym for thread' do
+        identity = ThreadIdentity.find_by(user: user, post: post_record)
+        identity.update!(pseudonym: 'Lion #1234')
+        expect(helper.display_author(user, context: post_record)).to eq('Lion #1234')
+      end
+
+      it 'returns pseudonym for answer context' do
+        answer = create(:answer, post: post_record, user: user)
+        identity = ThreadIdentity.find_by(user: user, post: post_record)
+        identity.update!(pseudonym: 'Lion #1234')
+        expect(helper.display_author(user, context: answer)).to eq('Lion #1234')
+      end
+
+      it 'returns anonymous handle if no thread context' do
+        expect(helper.display_author(user)).to eq(user.anonymous_handle)
+      end
     end
 
-    it 'returns the thread-specific pseudonym for other participants' do
-      other_user = create(:user)
-      identity = ThreadIdentity.for(other_user, post_record)
+    context 'when current_user is nil' do
+      before { allow(helper).to receive(:current_user).and_return(nil) }
 
-      result = helper.display_author(other_user, context: post_record)
-
-      expect(result).to eq(identity.pseudonym)
-    end
-
-    it 'reveals the email when the context flag is true' do
-      post_record.update!(show_real_identity: true)
-
-      result = helper.display_author(post_record.user, context: post_record)
-
-      expect(result).to eq(post_record.user.email)
-    end
-
-    it 'handles answer contexts via their post' do
-      answer = create(:answer, post: post_record)
-
-      identity = ThreadIdentity.for(answer.user, post_record)
-      expect(helper.display_author(answer.user, context: answer)).to eq(identity.pseudonym)
+      it 'returns pseudonym if thread exists' do
+        identity = ThreadIdentity.find_by(user: user, post: post_record)
+        identity.update!(pseudonym: 'Lion #1234')
+        expect(helper.display_author(user, context: post_record)).to eq('Lion #1234')
+      end
     end
   end
 end
