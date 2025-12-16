@@ -69,20 +69,32 @@
 
   <%# User-Reported Posts Section %>
   <% reported_total = @reported_posts.respond_to?(:total_count) ? @reported_posts.total_count : @reported_posts.size %>
+  <% urgent_count = @reported_posts.count { |p| p.reports_count >= 3 } %>
   <h3 class="comments-title">User-Reported Posts (<%= reported_total %>)</h3>
-  <p class="post-meta">Posts flagged by users for review</p>
+  <p class="post-meta">Posts flagged by users for review. <strong><%= urgent_count %></strong> need urgent review (3+ reports).</p>
 
   <% if @reported_posts.any? %>
     <div class="moderation-grid">
       <% @reported_posts.each do |post| %>
-        <div class="post-card ai-flagged-card" style="border-color: #17a2b8; background-color: #f0f8ff;" id="post-<%= post.id %>">
+        <% needs_urgent = post.reports_count >= 3 %>
+        <div class="post-card user-reported-card <%= needs_urgent ? 'urgent-review' : 'low-priority' %>" id="post-<%= post.id %>">
           <div class="post-card-header">
             <h3 class="post-title">
               <%= link_to post.title, post_path(post) %>
             </h3>
             <div class="status-badges">
-              <span class="post-card-status" style="background-color: #17a2b8; color: white;">
-                User Reported
+              <% if needs_urgent %>
+                <span class="report-badge urgent">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align: -2px; margin-right: 4px;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                  Needs Review
+                </span>
+              <% else %>
+                <span class="report-badge low-priority">
+                  Low Priority
+                </span>
+              <% end %>
+              <span class="report-count-badge">
+                <%= post.reports_count %> report<%= post.reports_count == 1 ? '' : 's' %>
               </span>
             </div>
           </div>
@@ -92,12 +104,20 @@
               Author: <%= display_author_for_moderator(post.user, context: post) %>
             </span>
             <span class="meta-chip">
-              Reported: <%= time_ago_in_words(post.reported_at || post.updated_at) %> ago
-            </span>
-            <span class="meta-chip">
-              Reason: <%= post.reported_reason %>
+              First reported: <%= time_ago_in_words(post.reported_at || post.updated_at) %> ago
             </span>
           </div>
+
+          <%# Show report reasons breakdown %>
+          <% if post.post_reports.any? %>
+            <div class="report-reasons">
+              <% post.post_reports.group_by(&:reason).each do |reason, reports| %>
+                <span class="reason-chip">
+                  <%= reason.humanize %> (<%= reports.count %>)
+                </span>
+              <% end %>
+            </div>
+          <% end %>
 
           <div class="post-card-actions">
             <%= link_to "Review", post_path(post), class: "mod-btn mod-btn-review" %>
@@ -107,11 +127,11 @@
                           params: { reason: 'policy_violation', state: 'redacted' },
                           class: "mod-btn mod-btn-redact",
                           data: { turbo_confirm: "Redact this reported post?" } %>
-            <%= button_to "Dismiss",
+            <%= button_to "Dismiss All",
                           dismiss_flag_post_path(post),
                           method: :delete,
                           class: "mod-btn mod-btn-approve",
-                          data: { turbo_confirm: "Dismiss report?" } %>
+                          data: { turbo_confirm: "Dismiss all #{post.reports_count} report(s)?" } %>
           </div>
         </div>
       <% end %>
@@ -447,5 +467,69 @@
     padding: 1.5em;
     border-radius: 8px;
     margin-top: 2em;
+  }
+
+  /* User-Reported Posts Styles */
+  .user-reported-card {
+    border-left: 4px solid #17a2b8;
+    background-color: #f8f9fa;
+  }
+
+  .user-reported-card.urgent-review {
+    border-left-color: #dc3545;
+    background-color: #fff5f5;
+  }
+
+  .user-reported-card.low-priority {
+    border-left-color: #ffc107;
+    background-color: #fffbea;
+  }
+
+  .report-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35em 0.75em;
+    border-radius: 6px;
+    font-size: 0.8em;
+    font-weight: 600;
+  }
+
+  .report-badge.urgent {
+    background-color: #dc3545;
+    color: white;
+  }
+
+  .report-badge.low-priority {
+    background-color: #ffc107;
+    color: #000;
+  }
+
+  .report-count-badge {
+    display: inline-block;
+    padding: 0.25em 0.6em;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: 600;
+    background-color: #6c757d;
+    color: white;
+  }
+
+  .report-reasons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    margin-top: 0.75em;
+    margin-bottom: 0.5em;
+  }
+
+  .reason-chip {
+    display: inline-block;
+    padding: 0.3em 0.65em;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 500;
+    background-color: #e9ecef;
+    color: #495057;
+    border: 1px solid #dee2e6;
   }
 </style>

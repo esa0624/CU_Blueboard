@@ -2,20 +2,31 @@ require 'rails_helper'
 
 RSpec.describe "Posts Controller Failures", type: :request do
   let(:user) { create(:user) }
+  let(:other_user) { create(:user) }
   let(:moderator) { create(:user, :moderator) }
-  let(:post_record) { create(:post, user: user) }
+  let(:post_record) { create(:post, user: other_user) }
 
   before { sign_in user }
 
   describe "POST /posts/:id/report" do
-    it "alerts when reporting fails" do
-      allow_any_instance_of(Post).to receive(:update).and_return(false)
+    it "alerts when user has already reported the post" do
+      create(:post_report, user: user, post: post_record)
 
       post report_post_path(post_record)
 
       expect(response).to redirect_to(post_path(post_record))
       follow_redirect!
-      expect(response.body).to include('Unable to flag content.')
+      expect(response.body).to include('You have already reported this post.')
+    end
+
+    it "alerts when trying to report own post" do
+      own_post = create(:post, user: user)
+
+      post report_post_path(own_post)
+
+      expect(response).to redirect_to(post_path(own_post))
+      follow_redirect!
+      expect(response.body).to include('You cannot report your own post.')
     end
   end
 
@@ -23,29 +34,29 @@ RSpec.describe "Posts Controller Failures", type: :request do
     context "as moderator" do
       before { sign_in moderator }
 
-      it "alerts when dismissal fails" do
-        allow_any_instance_of(Post).to receive(:update).and_return(false)
+      it "dismisses all reports successfully" do
+        create(:post_report, user: user, post: post_record)
+        post_record.update!(reported: true, reported_at: Time.current)
 
         delete dismiss_flag_post_path(post_record)
 
         expect(response).to redirect_to(post_path(post_record))
         follow_redirect!
-        expect(response.body).to include('Unable to dismiss flag.')
+        expect(response.body).to include('All reports dismissed.')
       end
     end
 
     context "as user" do
-      it "alerts when removal fails" do
-        # Simulate user having reported the post
-        post report_post_path(post_record)
-
-        allow_any_instance_of(Post).to receive(:update).and_return(false)
+      it "removes user's own report successfully" do
+        # User reports the post first
+        create(:post_report, user: user, post: post_record)
+        post_record.update!(reported: true, reported_at: Time.current)
 
         delete dismiss_flag_post_path(post_record)
 
         expect(response).to redirect_to(post_path(post_record))
         follow_redirect!
-        expect(response.body).to include('Unable to remove flag.')
+        expect(response.body).to include('Your report has been removed.')
       end
 
       it "alerts when user hasn't reported the post" do
@@ -53,7 +64,7 @@ RSpec.describe "Posts Controller Failures", type: :request do
 
         expect(response).to redirect_to(post_path(post_record))
         follow_redirect!
-        expect(response.body).to include('You cannot unflag this post.')
+        expect(response.body).to include('You have not reported this post.')
       end
     end
   end
@@ -107,26 +118,28 @@ RSpec.describe "Posts Controller Failures", type: :request do
   end
 
   describe "PATCH /posts/:id/reveal_identity" do
+    let(:own_post) { create(:post, user: user) }
+
     it "alerts when reveal fails" do
       allow_any_instance_of(Post).to receive(:update).and_return(false)
 
-      patch reveal_identity_post_path(post_record)
+      patch reveal_identity_post_path(own_post)
 
-      expect(response).to redirect_to(post_path(post_record))
+      expect(response).to redirect_to(post_path(own_post))
       follow_redirect!
       expect(response.body).to include('Unable to reveal identity.')
     end
   end
 
   describe "PATCH /posts/:id/hide_identity" do
-    before { post_record.update(show_real_identity: true) }
+    let(:own_post) { create(:post, user: user, show_real_identity: true) }
 
     it "alerts when hide fails" do
       allow_any_instance_of(Post).to receive(:update).and_return(false)
 
-      patch hide_identity_post_path(post_record)
+      patch hide_identity_post_path(own_post)
 
-      expect(response).to redirect_to(post_path(post_record))
+      expect(response).to redirect_to(post_path(own_post))
       follow_redirect!
       expect(response.body).to include('Unable to hide identity.')
     end
@@ -136,10 +149,10 @@ RSpec.describe "Posts Controller Failures", type: :request do
     let(:ai_post) { create(:post, ai_flagged: true, user: user) }
 
     it "alerts when appeal submission fails (e.g. not owner)" do
-      other_user = create(:user)
-      sign_in other_user
+      other_ai_post = create(:post, ai_flagged: true, user: other_user)
+      sign_in user
 
-      post appeal_post_path(ai_post)
+      post appeal_post_path(other_ai_post)
 
       expect(response).to redirect_to(posts_path)
       follow_redirect!
@@ -147,9 +160,10 @@ RSpec.describe "Posts Controller Failures", type: :request do
     end
 
     it "alerts when appeal fails for other reasons (e.g. not flagged)" do
-      post appeal_post_path(post_record) # post_record is not ai_flagged
+      own_post = create(:post, user: user)
+      post appeal_post_path(own_post) # post is not ai_flagged
 
-      expect(response).to redirect_to(post_path(post_record))
+      expect(response).to redirect_to(post_path(own_post))
       follow_redirect!
       expect(response.body).to include('Unable to submit appeal.')
     end

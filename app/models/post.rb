@@ -11,6 +11,8 @@ class Post < ApplicationRecord
   has_many :post_tags, dependent: :destroy
   has_many :tags, through: :post_tags
   has_many :post_revisions, dependent: :destroy
+  has_many :post_reports, dependent: :destroy
+  has_many :reporters, through: :post_reports, source: :user
   belongs_to :accepted_answer, class_name: 'Answer', optional: true
   belongs_to :redacted_by, class_name: 'User', optional: true
 
@@ -114,6 +116,16 @@ class Post < ApplicationRecord
     update!(appeal_requested: false)
   end
 
+  # Report helper methods
+  def reported_by?(user)
+    return false unless user
+
+    post_reports.exists?(user_id: user.id)
+  end
+
+  def needs_urgent_review?
+    reports_count >= 3
+  end
 
   def locked?
     locked_at.present?

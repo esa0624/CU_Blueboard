@@ -165,33 +165,45 @@ class PostsController < ApplicationController
   end
 
   def report
-    if @post.update(reported: true, reported_at: Time.current, reported_reason: 'User flagged')
-      session[:reported_post_ids] ||= []
-      session[:reported_post_ids] << @post.id
-      redirect_to @post, notice: 'Content flagged for moderator review.'
+    if @post.reported_by?(current_user)
+      redirect_to @post, alert: 'You have already reported this post.'
+      return
+    end
+
+    if @post.user == current_user
+      redirect_to @post, alert: 'You cannot report your own post.'
+      return
+    end
+
+    reason = params[:reason].presence || 'inappropriate'
+    report = @post.post_reports.build(user: current_user, reason: reason)
+
+    if report.save
+      @post.update(reported: true, reported_at: Time.current,
+                   reported_reason: "#{@post.reports_count} report(s)")
+      redirect_to @post, notice: 'Content reported to moderators.'
     else
-      redirect_to @post, alert: 'Unable to flag content.'
+      redirect_to @post, alert: report.errors.full_messages.to_sentence
     end
   end
 
   def dismiss_flag
-    session[:reported_post_ids] ||= []
-
     if current_user.can_moderate?
-      if @post.update(reported: false, reported_at: nil, reported_reason: nil)
-        redirect_to @post, notice: 'Flag dismissed.'
-      else
-        redirect_to @post, alert: 'Unable to dismiss flag.'
-      end
-    elsif session[:reported_post_ids].include?(@post.id)
-      if @post.update(reported: false, reported_at: nil, reported_reason: nil)
-        session[:reported_post_ids].delete(@post.id)
-        redirect_to @post, notice: 'Flag removed.'
-      else
-        redirect_to @post, alert: 'Unable to remove flag.'
-      end
+      @post.post_reports.destroy_all
+      @post.update(reported: false, reported_at: nil, reported_reason: nil)
+      redirect_to @post, notice: 'All reports dismissed.'
     else
-      redirect_to @post, alert: 'You cannot unflag this post.'
+      report = @post.post_reports.find_by(user: current_user)
+      if report&.destroy
+        if @post.post_reports.reload.empty?
+          @post.update(reported: false, reported_at: nil, reported_reason: nil)
+        else
+          @post.update(reported_reason: "#{@post.reports_count} report(s)")
+        end
+        redirect_to @post, notice: 'Your report has been removed.'
+      else
+        redirect_to @post, alert: 'You have not reported this post.'
+      end
     end
   end
 

@@ -16,10 +16,11 @@ module Moderation
                               .includes(:user, :redacted_by)
                               .order(updated_at: :desc)
 
-      # User-reported posts
-      @reported_posts = Post.where(reported: true, redaction_state: 'visible')
-                        .includes(:user)
-                        .order(reported_at: :desc)
+      # User-reported posts (ordered by report count, urgency first)
+      @reported_posts = Post.where(redaction_state: 'visible')
+                            .where('reports_count > 0')
+                            .includes(:user, :post_reports)
+                            .order(reports_count: :desc, reported_at: :desc)
     end
 
     # GET /moderation/posts/:id

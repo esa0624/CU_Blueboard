@@ -293,18 +293,37 @@
                       data: { turbo_confirm: "Redact this post for policy violations?" } %>
       <% end %>
       <% if user_signed_in? && @post.user != current_user && !current_user.can_moderate? %>
-        <% if session[:reported_post_ids]&.include?(@post.id) && @post.reported? %>
-          <%= button_to "Unflag Content",
+        <% if @post.reported_by?(current_user) %>
+          <%= button_to "Remove My Report",
                         dismiss_flag_post_path(@post),
                         method: :delete,
                         class: "btn-action-sm btn-flag active",
-                        data: { turbo_confirm: "Remove your flag from this content?" } %>
+                        data: { turbo_confirm: "Remove your report from this content?" } %>
         <% else %>
-          <%= button_to "Flag Content",
-                        report_post_path(@post),
-                        method: :post,
-                        class: "btn-action-sm btn-flag",
-                        data: { turbo_confirm: "Flag this content for moderator review?" } %>
+          <div class="report-dropdown">
+            <button type="button" class="btn-action-sm btn-flag" onclick="toggleReportMenu(this)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: -2px;"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>
+              Report
+            </button>
+            <div class="report-menu" style="display: none;">
+              <p class="report-menu-title">Why are you reporting?</p>
+              <%= button_to report_post_path(@post), method: :post, params: {reason: 'inappropriate'}, class: "report-option" do %>
+                <span class="report-option-icon">&#9888;</span> Inappropriate
+              <% end %>
+              <%= button_to report_post_path(@post), method: :post, params: {reason: 'harassment'}, class: "report-option" do %>
+                <span class="report-option-icon">&#128545;</span> Harassment
+              <% end %>
+              <%= button_to report_post_path(@post), method: :post, params: {reason: 'spam'}, class: "report-option" do %>
+                <span class="report-option-icon">&#128230;</span> Spam
+              <% end %>
+              <%= button_to report_post_path(@post), method: :post, params: {reason: 'misinformation'}, class: "report-option" do %>
+                <span class="report-option-icon">&#128269;</span> Misinformation
+              <% end %>
+              <%= button_to report_post_path(@post), method: :post, params: {reason: 'other'}, class: "report-option" do %>
+                <span class="report-option-icon">&#8226;</span> Other
+              <% end %>
+            </div>
+          </div>
         <% end %>
       <% end %>
     </div>
@@ -870,6 +889,59 @@
     color: white;
   }
 
+  /* Report Dropdown */
+  .report-dropdown {
+    position: relative;
+    display: inline-block;
+  }
+
+  .report-menu {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 200px;
+    padding: 12px 0;
+    margin-bottom: 8px;
+    z-index: 100;
+  }
+
+  .report-menu-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #495057;
+    padding: 0 12px 8px;
+    margin: 0;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  .report-option {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 10px 12px;
+    background: none;
+    border: none;
+    color: #495057;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    text-align: left;
+  }
+
+  .report-option:hover {
+    background-color: #f8f9fa;
+    color: #212529;
+  }
+
+  .report-option-icon {
+    margin-right: 8px;
+    font-size: 1rem;
+  }
+
   /* Vote Section - Center Large */
   .vote-section-center {
     flex: 0 0 auto;
@@ -1354,3 +1426,28 @@
     }
   }
 </style>
+
+<script>
+  function toggleReportMenu(button) {
+    const dropdown = button.closest('.report-dropdown');
+    const menu = dropdown.querySelector('.report-menu');
+    const isVisible = menu.style.display !== 'none';
+
+    // Close all other open menus
+    document.querySelectorAll('.report-menu').forEach(m => {
+      m.style.display = 'none';
+    });
+
+    // Toggle this menu
+    menu.style.display = isVisible ? 'none' : 'block';
+  }
+
+  // Close menu when clicking outside
+  document.addEventListener('click', function(event) {
+    if (!event.target.closest('.report-dropdown')) {
+      document.querySelectorAll('.report-menu').forEach(menu => {
+        menu.style.display = 'none';
+      });
+    }
+  });
+</script>

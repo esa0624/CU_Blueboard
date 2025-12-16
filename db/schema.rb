@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_02_120000) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_16_030820) do
   create_table "answer_comment_likes", force: :cascade do |t|
     t.integer "answer_comment_id", null: false
     t.datetime "created_at", null: false
@@ -103,6 +103,17 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_02_120000) do
     t.index ["user_id"], name: "index_likes_on_user_id"
   end
 
+  create_table "post_reports", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "post_id", null: false
+    t.string "reason", default: "inappropriate", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["post_id"], name: "index_post_reports_on_post_id"
+    t.index ["user_id", "post_id"], name: "index_post_reports_on_user_id_and_post_id", unique: true
+    t.index ["user_id"], name: "index_post_reports_on_user_id"
+  end
+
   create_table "post_revisions", force: :cascade do |t|
     t.text "body"
     t.datetime "created_at", null: false
@@ -142,6 +153,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_02_120000) do
     t.boolean "reported", default: false, null: false
     t.datetime "reported_at"
     t.string "reported_reason"
+    t.integer "reports_count", default: 0, null: false
     t.string "school"
     t.datetime "screened_at"
     t.boolean "show_real_identity", default: false, null: false
@@ -156,6 +168,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_02_120000) do
     t.index ["expires_at"], name: "index_posts_on_expires_at"
     t.index ["locked_at"], name: "index_posts_on_locked_at"
     t.index ["redacted_by_id"], name: "index_posts_on_redacted_by_id"
+    t.index ["reports_count"], name: "index_posts_on_reports_count"
     t.index ["school"], name: "index_posts_on_school"
     t.index ["status"], name: "index_posts_on_status"
     t.index ["topic_id"], name: "index_posts_on_topic_id"
@@ -231,6 +244,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_02_120000) do
   add_foreign_key "bookmarks", "users"
   add_foreign_key "likes", "posts"
   add_foreign_key "likes", "users"
+  add_foreign_key "post_reports", "posts"
+  add_foreign_key "post_reports", "users"
   add_foreign_key "post_revisions", "posts"
   add_foreign_key "post_revisions", "users"
   add_foreign_key "post_tags", "posts"

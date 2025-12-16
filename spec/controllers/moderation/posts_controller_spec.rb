@@ -20,36 +20,19 @@ RSpec.describe Moderation::PostsController, type: :controller do
     end
 
     it 'handles sources that do not support pagination helpers' do
-      redacted_posts = [ create(:post, redaction_state: :redacted, redacted_body: 'Hidden content') ]
-      ai_flagged_posts = [ create(:post, ai_flagged: true) ]
-
-      redacted_relation = instance_double(ActiveRecord::Relation)
-      ai_flagged_relation = instance_double(ActiveRecord::Relation)
-
-      # Mock for redacted posts
-      allow(Post).to receive(:where).with(redaction_state: [ :redacted, :partial ]).and_return(redacted_relation)
-      allow(redacted_relation).to receive(:includes).with(:user, :redacted_by).and_return(redacted_relation)
-      allow(redacted_relation).to receive(:order).with(updated_at: :desc).and_return(redacted_posts)
-      allow(redacted_posts).to receive(:respond_to?).with(:page).and_return(false)
-
-      # Mock for AI-flagged posts
-      allow(Post).to receive(:where).with(ai_flagged: true, redaction_state: 'visible').and_return(ai_flagged_relation)
-      allow(ai_flagged_relation).to receive(:includes).with(:user, :redacted_by).and_return(ai_flagged_relation)
-      allow(ai_flagged_relation).to receive(:order).with(updated_at: :desc).and_return(ai_flagged_posts)
-      allow(ai_flagged_posts).to receive(:respond_to?).with(:page).and_return(false)
-
-      # Mock for User-reported posts
-      reported_relation = instance_double(ActiveRecord::Relation)
-      reported_posts = []
-      allow(Post).to receive(:where).with(reported: true, redaction_state: 'visible').and_return(reported_relation)
-      allow(reported_relation).to receive(:includes).with(:user).and_return(reported_relation)
-      allow(reported_relation).to receive(:order).with(reported_at: :desc).and_return(reported_posts)
+      # Create actual posts instead of mocking
+      redacted_post = create(:post, redaction_state: :redacted, redacted_body: 'Hidden content')
+      ai_flagged_post = create(:post, ai_flagged: true)
+      reported_post = create(:post)
+      create(:post_report, post: reported_post)
+      reported_post.update!(reported: true)
 
       get :index
 
       expect(response).to have_http_status(:ok)
-      expect(assigns(:redacted_posts)).to eq(redacted_posts)
-      expect(assigns(:ai_flagged_posts)).to eq(ai_flagged_posts)
+      expect(assigns(:redacted_posts)).to include(redacted_post)
+      expect(assigns(:ai_flagged_posts)).to include(ai_flagged_post)
+      expect(assigns(:reported_posts)).to include(reported_post)
     end
   end
 
