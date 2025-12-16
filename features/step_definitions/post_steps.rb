@@ -76,7 +76,7 @@ When('I create a post titled {string} with body {string}') do |title, body|
   login_as(User.find_by!(email: @current_user_email), scope: :user)
   begin
     visit '/'
-    click_link 'Submit a Post'
+    click_link 'Create Post'
     fill_in 'Title', with: title
     fill_in 'Content', with: body
     select_required_topic_and_tags
@@ -100,7 +100,7 @@ end
 
 When('I create an expiring post titled {string} with body {string} that expires in {int} days') do |title, body, days|
   visit '/'
-  click_link 'Submit a Post'
+  click_link 'Create Post'
   fill_in 'Title', with: title
   fill_in 'Content', with: body
   select "#{days} days", from: 'post_expires_at'
@@ -113,7 +113,7 @@ end
 
 When('I try to create a post without a title') do
   visit '/'
-  click_link 'Submit a Post'
+  click_link 'Create Post'
   fill_in 'Title', with: ''
   fill_in 'Content', with: ''
   select_required_topic_and_tags
@@ -150,7 +150,7 @@ end
 
 When('I preview a post titled {string} with body {string}') do |title, body|
   visit '/'
-  click_link 'Submit a Post'
+  click_link 'Create Post'
   fill_in 'Title', with: title
   fill_in 'Content', with: body
   select_required_topic_and_tags

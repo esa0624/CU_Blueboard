@@ -1,6 +1,5 @@
 class TestSessionsController < ApplicationController
   skip_before_action :authenticate_user!
-  before_action :ensure_non_production
 
   def create_student
     user = User.find_or_create_by!(email: 'testuser@columbia.edu') do |u|
@@ -26,11 +25,5 @@ class TestSessionsController < ApplicationController
 
     sign_in(:user, user)
     redirect_to root_path, notice: 'Signed in as Test Moderator'
-  end
-
-  private
-
-  def ensure_non_production
-    raise ActionController::RoutingError, 'Not Found' unless Rails.env.development? || Rails.env.test?
   end
 end

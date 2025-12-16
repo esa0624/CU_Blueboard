@@ -1,70 +1,137 @@
 <div class="main-content-container" id="index-page-container">
-  <div class="action-bar-container">
-    <%= form_with(url: posts_path, method: :get, scope: :filters, class: "filter-form", local: true) do |form| %>
-      <div class="filter-grid">
-        <div class="filter-field">
-          <%= form.label :q, "Search", class: 'form-label' %>
-          <%= form.text_field :q, value: @filter_form[:q], placeholder: "Search posts", class: 'form-input' %>
+  <div class="action-bar-container" data-controller="advanced-search">
+    <%= form_with(url: posts_path, method: :get, scope: :filters, class: "search-bar-form", local: true) do |form| %>
+      <!-- Top Search Bar Row -->
+      <div class="search-bar-row">
+        <!-- 1. Main Search Input -->
+        <div class="quick-search-wrapper">
+          <label for="search-field" class="sr-only">Search</label>
+          <span class="search-icon-symbol">&#128269;</span>
+          <%= form.text_field :q,
+                value: @filter_form[:q],
+                placeholder: "Search posts...",
+                class: 'quick-search-input',
+                id: 'search-field',
+                autocomplete: 'off' %>
+          <% if @filter_form[:q].present? %>
+            <%= link_to posts_path, class: 'search-clear-btn', title: 'Clear search' do %>
+              &#10005;
+            <% end %>
+          <% end %>
         </div>
-        <div class="filter-field">
-          <%= form.label :topic_id, "Topic", class: 'form-label' %>
-          <%= form.select :topic_id,
-                options_from_collection_for_select(@topics, :id, :name, @filter_form[:topic_id]),
-                { include_blank: 'All topics' },
-                class: 'form-input' %>
+
+        <!-- 2. Search Submit Button -->
+        <button type="submit" class="btn-search-submit" title="Apply Filters">
+          <span class="search-submit-icon">&#8594;</span>
+          <span class="sr-only">Apply Filters</span>
+        </button>
+
+        <!-- 3. Advanced Search Toggle Button -->
+        <button type="button"
+                class="advanced-search-btn"
+                data-action="click->advanced-search#toggle"
+                data-advanced-search-target="toggleButton">
+          <span class="filter-icon-symbol">&#9881;</span>
+          <span class="btn-text">Filters</span>
+          <% active_filter_count = count_active_filters(@filter_form) %>
+          <% if active_filter_count > 0 %>
+            <span class="filter-badge"><%= active_filter_count %></span>
+          <% end %>
+          <span class="chevron-icon" data-advanced-search-target="chevron">&#9660;</span>
+        </button>
+
+        <!-- 3. Create Post Button -->
+        <%= link_to new_post_path, class: "btn-create-post" do %>
+          <span class="plus-icon">+</span>
+          <span class="btn-create-text">Create Post</span>
+        <% end %>
+      </div>
+
+      <!-- Advanced Search Panel (hidden by default) -->
+      <div class="advanced-search-panel"
+           data-advanced-search-target="panel"
+           style="display: none;">
+        <div class="filter-grid-compact">
+          <div class="filter-field">
+            <%= form.label :topic_id, "Topic", class: 'form-label-sm' %>
+            <%= form.select :topic_id,
+                  options_from_collection_for_select(@topics, :id, :name, @filter_form[:topic_id]),
+                  { include_blank: 'All topics' },
+                  class: 'form-input-sm' %>
+          </div>
+
+          <div class="filter-field">
+            <%= form.label :status, "Status", class: 'form-label-sm' %>
+            <%= form.select :status,
+                  options_for_select(Post::STATUSES.map { |key, value| [key.to_s.humanize, value] }, @filter_form[:status]),
+                  { include_blank: 'All statuses' },
+                  class: 'form-input-sm' %>
+          </div>
+
+          <div class="filter-field">
+            <%= form.label :school, "School", class: 'form-label-sm' %>
+            <%= form.select :school,
+                  options_for_select(Post::SCHOOLS, @filter_form[:school]),
+                  { include_blank: 'All schools' },
+                  class: 'form-input-sm' %>
+          </div>
+
+          <div class="filter-field">
+            <%= form.label :course_code, "Course", class: 'form-label-sm' %>
+            <%= form.text_field :course_code,
+                  value: @filter_form[:course_code],
+                  placeholder: "e.g., COMS W4152",
+                  class: 'form-input-sm' %>
+          </div>
+
+          <div class="filter-field">
+            <%= form.label :timeframe, "Timeframe", class: 'form-label-sm' %>
+            <%= form.select :timeframe,
+                  options_for_select([
+                    ['Any time', ''],
+                    ['Last 24 hours', '24h'],
+                    ['Past 7 days', '7d'],
+                    ['Past 30 days', '30d']
+                  ], @filter_form[:timeframe]),
+                  {},
+                  class: 'form-input-sm' %>
+          </div>
         </div>
-        <div class="filter-field">
-          <%= form.label :status, "Status", class: 'form-label' %>
-          <%= form.select :status,
-                options_for_select(Post::STATUSES.map { |key, value| [key.to_s.humanize, value] }, @filter_form[:status]),
-                { include_blank: 'All statuses' },
-                class: 'form-input' %>
-        </div>
-        <div class="filter-field">
-          <%= form.label :school, "School", class: 'form-label' %>
-          <%= form.select :school,
-                options_for_select(Post::SCHOOLS, @filter_form[:school]),
-                { include_blank: 'All schools' },
-                class: 'form-input' %>
-        </div>
-        <div class="filter-field">
-          <%= form.label :course_code, "Course", class: 'form-label' %>
-          <%= form.text_field :course_code, value: @filter_form[:course_code], placeholder: "e.g., COMS W4152", class: 'form-input' %>
-        </div>
-        <div class="filter-field">
-          <%= form.label :timeframe, "Timeframe", class: 'form-label' %>
-          <%= form.select :timeframe,
-                options_for_select([['Any time', ''], ['Last 24 hours', '24h'], ['Past 7 days', '7d'], ['Past 30 days', '30d']], @filter_form[:timeframe]),
-                {},
-                class: 'form-input' %>
-        </div>
-        <div class="filter-field full-width">
-          <%= form.label :tag_ids, "Tags", class: 'form-label' %>
-          <%= select_tag 'filters[tag_ids][]',
-                options_from_collection_for_select(@tags, :id, :name, Array(@filter_form[:tag_ids])),
-                multiple: true,
-                class: 'form-input tag-multiselect' %>
-          
-          <div class="tag-match-options" style="margin-top: 0.5em; display: flex; gap: 1em;">
-            <label class="radio-label" style="font-size: 0.9em; display: flex; align-items: center; gap: 0.3em; cursor: pointer;">
+
+        <!-- Tags Section -->
+        <div class="filter-tags-section">
+          <%= form.label :tag_ids, "Tags", class: 'form-label-sm' %>
+          <div class="tag-chips-container">
+            <% @tags.each do |tag| %>
+              <label class="tag-chip-label">
+                <input type="checkbox"
+                       name="filters[tag_ids][]"
+                       value="<%= tag.id %>"
+                       <%= 'checked' if Array(@filter_form[:tag_ids]).map(&:to_s).include?(tag.id.to_s) %>>
+                <span class="tag-chip-text"><%= tag.name %></span>
+              </label>
+            <% end %>
+          </div>
+
+          <div class="tag-match-row">
+            <label class="radio-label-inline">
               <%= form.radio_button :tag_match, 'all', checked: (@filter_form[:tag_match] != 'any') %>
-              Match all selected
+              <span>Match all</span>
             </label>
-            <label class="radio-label" style="font-size: 0.9em; display: flex; align-items: center; gap: 0.3em; cursor: pointer;">
+            <label class="radio-label-inline">
               <%= form.radio_button :tag_match, 'any', checked: (@filter_form[:tag_match] == 'any') %>
-              Match any selected
+              <span>Match any</span>
             </label>
           </div>
-          <small class="form-hint">Hold Command/Ctrl to select multiple tags.</small>
+        </div>
+
+        <!-- Filter Actions -->
+        <div class="filter-actions-row">
+          <button type="submit" class="filter-apply-btn">Apply Filters</button>
+          <%= link_to 'Reset All', posts_path, class: 'filter-reset-btn' %>
         </div>
       </div>
-      <div class="filter-actions">
-        <button type="submit" class="search-button">Apply Filters</button>
-        <%= link_to 'Reset', posts_path, class: 'form-cancel-button' %>
-      </div>
     <% end %>
-
-    <%= link_to "Submit a Post", new_post_path, class: "btn-submit-question" %>
   </div>
 
   <div class="feed-layout">
@@ -128,7 +195,7 @@
           <% end %>
         <% elsif @viewing_my_threads %>
           <div class="empty-state">
-            <p>You have not created any threads yet. Submit a post to get started!</p>
+            <p>You have not created any threads yet. Create a post to get started!</p>
           </div>
         <% elsif @viewing_bookmarked %>
           <div class="empty-state">
@@ -149,6 +216,348 @@
 </div>
 
 <style>
+  /* Search Bar Row */
+  .search-bar-form {
+    width: 100%;
+  }
+
+  .search-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e9ecef;
+  }
+
+  .quick-search-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 10px 14px;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+  }
+
+  .quick-search-wrapper:focus-within {
+    background: #fff;
+    border-color: #2a4a75;
+    box-shadow: 0 0 0 3px rgba(42, 74, 117, 0.1);
+  }
+
+  .search-icon-symbol {
+    font-size: 1rem;
+    opacity: 0.5;
+  }
+
+  .quick-search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 1rem;
+    outline: none;
+    min-width: 150px;
+  }
+
+  .quick-search-input::placeholder {
+    color: #adb5bd;
+  }
+
+  .search-clear-btn {
+    color: #6c757d;
+    font-size: 1rem;
+    line-height: 1;
+    text-decoration: none;
+    padding: 2px 6px;
+    border-radius: 50%;
+    transition: all 0.2s;
+  }
+
+  .search-clear-btn:hover {
+    background: #e9ecef;
+    color: #495057;
+  }
+
+  /* Search Submit Button */
+  .btn-search-submit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: #2a4a75;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .btn-search-submit:hover {
+    background: #1e3a5f;
+  }
+
+  .search-submit-icon {
+    font-size: 1.2rem;
+    font-weight: bold;
+  }
+
+  /* Screen Reader Only */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Advanced Search Button */
+  .advanced-search-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #495057;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .advanced-search-btn:hover {
+    background: #e9ecef;
+    border-color: #ced4da;
+  }
+
+  .advanced-search-btn.active {
+    background: #2a4a75;
+    color: #fff;
+    border-color: #2a4a75;
+  }
+
+  .filter-icon-symbol {
+    font-size: 1rem;
+  }
+
+  .filter-badge {
+    background: #dc3545;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+  }
+
+  .advanced-search-btn.active .filter-badge {
+    background: #fff;
+    color: #2a4a75;
+  }
+
+  .chevron-icon {
+    font-size: 0.7rem;
+    transition: transform 0.3s ease;
+  }
+
+  /* Create Post Button */
+  .btn-create-post {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    padding: 10px 20px;
+    background-color: #2a4a75;
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1rem;
+    white-space: nowrap;
+    transition: background-color 0.2s;
+  }
+
+  .btn-create-post:hover {
+    background-color: #223a5e;
+    color: white;
+  }
+
+  .plus-icon {
+    font-size: 1.2rem;
+    font-weight: 300;
+  }
+
+  /* Advanced Search Panel */
+  .advanced-search-panel {
+    margin-top: 12px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e9ecef;
+    animation: slideDown 0.25s ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .filter-grid-compact {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+  }
+
+  .form-label-sm {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 6px;
+  }
+
+  .form-input-sm {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+  }
+
+  .form-input-sm:focus {
+    border-color: #2a4a75;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(42, 74, 117, 0.1);
+  }
+
+  /* Tags Section */
+  .filter-tags-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #f1f3f5;
+  }
+
+  .tag-chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .tag-chip-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .tag-chip-label:hover {
+    background: #e9ecef;
+  }
+
+  .tag-chip-label:has(input:checked) {
+    background: #2a4a75;
+    border-color: #2a4a75;
+    color: #fff;
+  }
+
+  .tag-chip-label input {
+    display: none;
+  }
+
+  .tag-match-row {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+  }
+
+  .radio-label-inline {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: #6c757d;
+    cursor: pointer;
+  }
+
+  .radio-label-inline input {
+    accent-color: #2a4a75;
+  }
+
+  /* Filter Action Buttons */
+  .filter-actions-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #f1f3f5;
+  }
+
+  .filter-apply-btn {
+    background: #2a4a75;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .filter-apply-btn:hover {
+    background: #223a5e;
+  }
+
+  .filter-reset-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-decoration: none;
+    background: transparent;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s;
+  }
+
+  .filter-reset-btn:hover {
+    background: #f8f9fa;
+    color: #495057;
+    text-decoration: none;
+  }
+
+  /* Feed Layout */
   .feed-layout {
     display: grid;
     grid-template-columns: 1fr 300px;
@@ -156,14 +565,61 @@
     align-items: start;
   }
 
+  /* Responsive */
   @media (max-width: 900px) {
     .feed-layout {
       grid-template-columns: 1fr;
     }
-    
+
     .feed-sidebar {
-      order: -1; /* Show sidebar on top on mobile, or remove this to show at bottom */
-      display: none; /* Hide on mobile for now to save space, or make collapsible */
+      display: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .search-bar-row {
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .quick-search-wrapper {
+      flex: 1 1 100%;
+      order: 1;
+    }
+
+    .advanced-search-btn {
+      flex: 1;
+      justify-content: center;
+      order: 2;
+    }
+
+    .btn-create-post {
+      flex: 1;
+      justify-content: center;
+      order: 3;
+      margin-left: 0;
+    }
+
+    .filter-grid-compact {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .search-bar-row {
+      padding: 10px;
+    }
+
+    .advanced-search-btn .btn-text {
+      display: none;
+    }
+
+    .btn-create-post .btn-create-text {
+      display: none;
+    }
+
+    .advanced-search-panel {
+      padding: 16px;
     }
   }
 </style>

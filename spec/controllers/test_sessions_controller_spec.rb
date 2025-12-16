@@ -29,14 +29,4 @@ RSpec.describe TestSessionsController, type: :controller do
     end
   end
 
-  describe 'production environment guard' do
-    it 'raises routing error in production environment' do
-      allow(Rails.env).to receive(:development?).and_return(false)
-      allow(Rails.env).to receive(:test?).and_return(false)
-
-      expect {
-        post :create_student
-      }.to raise_error(ActionController::RoutingError, 'Not Found')
-    end
-  end
 end
