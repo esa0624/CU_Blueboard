@@ -1,0 +1,60 @@
+<%# Answer partial for rendering individual answers %>
+<% accepted = (post.accepted_answer_id == answer.id) %>
+<div class="comment-card <%= 'accepted-answer' if accepted %>" id="answer-<%= answer.id %>">
+  <div class="answer-card-with-vote">
+    <%# Left side: Voting section %>
+    <div class="answer-vote-section">
+      <% if current_user %>
+        <% current_vote = answer.find_vote_by(current_user) %>
+        <%= button_to upvote_post_answer_path(post, answer),
+                      method: :post,
+                      class: "btn-vote-compact btn-upvote #{'active' if current_vote&.upvote?}",
+                      data: { turbo_action: "replace" } do %>
+          <span class="vote-arrow-compact">▲</span>
+        <% end %>
+        <div class="vote-score-compact"><%= answer.net_score %></div>
+        <%= button_to downvote_post_answer_path(post, answer),
+                      method: :post,
+                      class: "btn-vote-compact btn-downvote #{'active' if current_vote&.downvote?}",
+                      data: { turbo_action: "replace" } do %>
+          <span class="vote-arrow-compact">▼</span>
+        <% end %>
+      <% else %>
+        <div class="vote-score-compact-guest"><%= answer.net_score %></div>
+      <% end %>
+    </div>
+
+    <%# Right side: Answer content %>
+    <div class="answer-content-section">
+      <div class="comment-meta">
+        <span class="comment-author">
+          <strong><%= display_author(answer.user, context: answer) %></strong>
+        </span>
+        <span class="comment-time">
+          <% if answer.created_at.present? %>
+            <%= time_ago_in_words(answer.created_at) %> ago
+          <% else %>
+            just now
+          <% end %>
+        </span>
+        <% if accepted %>
+          <span class="identity-badge">Accepted answer</span>
+        <% end %>
+      </div>
+
+      <div class="comment-body">
+        <%= answer.body %>
+      </div>
+
+      <div class="comment-actions">
+        <% if current_user && post.user == current_user && !post.locked? %>
+          <%= button_to "Accept Answer",
+                        accept_post_answer_path(post, answer),
+                        method: :patch,
+                        class: "comment-reveal-button",
+                        data: { turbo_confirm: "Accept this answer and lock the thread?" } %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

@@ -564,3 +564,105 @@ else
   puts "  Total Comment Likes: #{AnswerCommentLike.count}"
   puts "  Total Users: #{User.count}"
 end
+
+# =============================================================================
+# MODERATOR ACCOUNTS & DEMO MODERATION DATA
+# =============================================================================
+puts "\n--- Seeding Moderator Data ---"
+
+# Create moderator account
+moderator = User.find_or_create_by!(email: 'moderator@columbia.edu') do |u|
+  u.password = 'password123'
+  u.password_confirmation = 'password123'
+  u.role = :moderator
+end
+# Ensure role is moderator even if user existed
+moderator.update!(role: :moderator) unless moderator.moderator?
+puts "  Created/updated moderator: #{moderator.email}"
+
+# Create demo moderation content (only if none exists)
+if Post.where.not(redaction_state: 'visible').count == 0 && Post.where(ai_flagged: true).count == 0
+  sample_user = User.where.not(role: :moderator).first
+  topic = Topic.first
+  tag = Tag.first
+
+  if sample_user && topic && tag
+    # 1. Redacted post (policy violation)
+    policy_post = Post.create!(
+      user: sample_user,
+      topic: topic,
+      tags: [tag],
+      title: "Looking for exam answers - will pay!!",
+      body: "Anyone have answers for tomorrow's final? Can Venmo you $50. DM me ASAP.",
+      school: 'Columbia',
+      status: 'open'
+    )
+    RedactionService.redact_post(
+      post: policy_post,
+      moderator: moderator,
+      reason: 'academic_integrity'
+    )
+    puts "  Created redacted post: academic_integrity"
+
+    # 2. AI-flagged post (mental health concern)
+    ai_flagged_post = Post.create!(
+      user: sample_user,
+      topic: Topic.find_by(name: 'Wellness') || topic,
+      tags: [Tag.find_by(slug: 'mental-health') || tag],
+      title: "Feeling overwhelmed and hopeless lately...",
+      body: "Everything feels like too much. I don't know what to do anymore. Nothing seems to matter and I can't see things getting better. Has anyone else felt this way?",
+      school: 'Columbia',
+      status: 'open',
+      ai_flagged: true,
+      ai_categories: { 'self-harm' => true, 'harassment' => false, 'violence' => false },
+      ai_scores: { 'self-harm' => 0.72, 'harassment' => 0.05, 'violence' => 0.02 },
+      screened_at: Time.current
+    )
+    puts "  Created AI-flagged post: self-harm concern"
+
+    # 3. User-reported post
+    reported_post = Post.create!(
+      user: sample_user,
+      topic: topic,
+      tags: [tag],
+      title: "This professor is terrible and should be fired",
+      body: "Prof X in the CS department is the worst. They don't answer emails, grade unfairly, and clearly don't care about students. Avoid at all costs!!!",
+      school: 'Columbia',
+      status: 'open',
+      reported: true,
+      reported_at: 2.hours.ago,
+      reported_reason: 'harassment'
+    )
+    puts "  Created user-reported post: harassment"
+
+    # 4. AI-flagged post with appeal
+    appealed_post = Post.create!(
+      user: sample_user,
+      topic: topic,
+      tags: [tag],
+      title: "Intense debate about political science class",
+      body: "We had a heated discussion in class today about controversial topics. Some students got really passionate and voices were raised. Is this normal for poli sci classes?",
+      school: 'Columbia',
+      status: 'open',
+      ai_flagged: true,
+      ai_categories: { 'hate' => true, 'violence' => false },
+      ai_scores: { 'hate' => 0.45, 'violence' => 0.12 },
+      screened_at: 1.day.ago,
+      appeal_requested: true,
+      appeal_requested_at: 12.hours.ago
+    )
+    puts "  Created AI-flagged post with appeal: hate speech (false positive)"
+
+    puts "  Created 4 demo moderation posts for dashboard testing"
+  else
+    puts "  Skipped moderation demo data (missing user/topic/tag)"
+  end
+else
+  puts "  Moderation demo data already exists. Skipping..."
+end
+
+puts "\n--- Moderator Data Seeding Complete! ---"
+puts "  Moderators: #{User.where(role: :moderator).count}"
+puts "  Redacted Posts: #{Post.where.not(redaction_state: 'visible').count}"
+puts "  AI-Flagged Posts: #{Post.where(ai_flagged: true).count}"
+puts "  Reported Posts: #{Post.where(reported: true).count}"

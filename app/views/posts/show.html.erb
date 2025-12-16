@@ -2,7 +2,7 @@
   Post detail page: displays question, all answers, and anonymity/identity reveal features
 %>
 
-<div class="main-content-container" data-controller="post-show">
+<div class="main-content-container" data-controller="post-show realtime" data-realtime-post-id-value="<%= @post.id %>">
 
   <%# --- Post title and author information --- %>
   <h2 class="page-title"><%= @post.title %></h2>
@@ -312,8 +312,11 @@
 
   <hr class="section-divider">
 
+  <%# --- Typing indicator --- %>
+  <div class="typing-indicator" data-realtime-target="typingIndicator" style="display: none;"></div>
+
   <%# --- Answer form --- %>
-  <div data-post-show-target="answerForm">
+  <div data-post-show-target="answerForm" data-realtime-target="answerForm">
     <% if @post.locked? %>
       <p class="identity-badge">This thread is locked. No new answers can be added.</p>
     <% else %>
@@ -343,7 +346,7 @@
   <%# --- Answer list --- %>
   <h3 class="comments-title">Answers (<%= @answers.count %>)</h3>
 
-  <div class="comments-list-container" id="answers">
+  <div class="comments-list-container" id="answers" data-realtime-target="answers">
     <% @answers.each do |answer| %>
       <% next unless answer.persisted? %>
       <% accepted = (@post.accepted_answer_id == answer.id) %>
@@ -1289,5 +1292,65 @@
     background: linear-gradient(135deg, #218838 0%, #19692c 100%);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(40, 167, 69, 0.35);
+  }
+
+  /* Realtime Features */
+  .typing-indicator {
+    padding: 0.75em 1em;
+    background-color: #e9ecef;
+    border-radius: 8px;
+    font-size: 0.9em;
+    color: #495057;
+    margin-bottom: 1em;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  .answer-highlight {
+    animation: highlight-flash 3s ease-out;
+  }
+
+  @keyframes highlight-flash {
+    0% { background-color: #d4edda; }
+    100% { background-color: transparent; }
+  }
+
+  .realtime-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #28a745;
+    color: white;
+    padding: 1em 1.5em;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    animation: slide-in 0.3s ease-out;
+  }
+
+  @keyframes slide-in {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .realtime-notification.fade-out {
+    animation: fade-out 0.5s ease-out forwards;
+  }
+
+  @keyframes fade-out {
+    to {
+      opacity: 0;
+      transform: translateY(10px);
+    }
   }
 </style>

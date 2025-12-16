@@ -12,6 +12,16 @@ module ApplicationHelper
     user.anonymous_handle
   end
 
+  # Display author with pseudonym AND email for moderator views
+  def display_author_for_moderator(user, context: nil)
+    return 'Unknown' unless user
+
+    thread = thread_from(context)
+    pseudonym = thread ? ThreadIdentity.for(user, thread).pseudonym : user.anonymous_handle
+
+    "#{pseudonym} (#{user.email})"
+  end
+
   private
 
   def reveal_real_identity?(context)

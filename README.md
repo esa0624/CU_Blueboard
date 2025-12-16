@@ -645,3 +645,30 @@ CU_Blueboard/
 ├── example.env                         # Environment variables template (copy to .env)
 └── Gemfile                             # Dependencies (Rails 8.1, Devise, OmniAuth, etc.)
 ```
+
+## TA Feedback & Improvements
+
+Based on TA suggestions during the project demo, we implemented the following enhancements to improve the platform's functionality and user experience:
+
+### Real-time Features (ActionCable)
+- **Live Answer Notifications**: WebSocket-based alerts notify users when someone answers their post in real-time, without page refresh. New answers slide in with a highlight animation.
+- **Typing Indicators**: "Lion #XXXX is typing..." appears when another user is composing an answer, providing better engagement feedback similar to modern chat applications.
+- **Technical Implementation**: Uses Rails ActionCable with Solid Cable (database-backed adapter) for Heroku compatibility. Stimulus controllers handle client-side WebSocket subscriptions.
+
+### Moderator Statistics Dashboard
+- **Analytics Overview**: New `/moderation/dashboard` page displays platform metrics including total posts, answers, users, and moderation statistics.
+- **Visual Charts**: Chart.js-powered visualizations show daily post activity trends (line chart) and topic distribution (doughnut chart) over the past 30 days.
+- **Key Metrics**: Response rate (posts with answers), resolution rate (solved posts), redacted/AI-flagged/reported post counts for moderation insights.
+
+### Moderation Enhancements
+- **Pseudonym Visibility**: Moderators now see both pseudonyms ("Lion #XXXX") and email addresses in the moderation dashboard, balancing accountability with privacy context.
+- **Demo Moderation Data**: Added sample redacted, AI-flagged, and reported posts to `db/seeds.rb` for TA testing of moderation workflows.
+
+### Security Improvements
+- **Environment Guard**: Test login endpoints (`/test_sessions/*`) are now restricted to development and test environments only, preventing accidental exposure in production.
+
+### Technical Notes
+- ActionCable channels: `PostChannel` (answer notifications), `TypingChannel` (typing indicators)
+- Warden integration for ActionCable authentication (reuses Devise sessions)
+- 100% test coverage maintained with new channel specs and controller tests
+- All features are Heroku-ready (no Redis required - uses Solid Cable with database adapter)

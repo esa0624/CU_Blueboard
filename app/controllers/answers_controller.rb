@@ -14,6 +14,7 @@ class AnswersController < ApplicationController
     @answer.user = current_user
 
     if @answer.save
+      broadcast_new_answer(@answer)
       redirect_to @post, notice: 'Answer added.'
     else
       @answers = @post.answers.includes(:user).order(created_at: :asc)
@@ -88,5 +89,15 @@ class AnswersController < ApplicationController
     return if @post.user == current_user
 
     redirect_to(@post, alert: 'Only the question author can manage accepted answers.') and return
+  end
+
+  def broadcast_new_answer(answer)
+    html = ApplicationController.render(
+      partial: 'answers/answer',
+      locals: { answer: answer, post: @post, current_user: nil }
+    )
+    PostChannel.broadcast_to(@post, { action: 'new_answer', html: html })
+  rescue StandardError => e
+    Rails.logger.error("Failed to broadcast new answer: #{e.message}")
   end
 end

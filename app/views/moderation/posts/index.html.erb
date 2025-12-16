@@ -27,7 +27,7 @@
 
           <div class="post-card-meta">
             <span class="meta-chip">
-              Author: <%= post.user.email %>
+              Author: <%= display_author_for_moderator(post.user, context: post) %>
             </span>
             <span class="meta-chip">
               Redacted by: <%= post.redacted_by&.email || 'Unknown' %>
@@ -89,7 +89,7 @@
 
           <div class="post-card-meta">
             <span class="meta-chip">
-              Author: <%= post.user.email %>
+              Author: <%= display_author_for_moderator(post.user, context: post) %>
             </span>
             <span class="meta-chip">
               Reported: <%= time_ago_in_words(post.reported_at || post.updated_at) %> ago
@@ -151,7 +151,7 @@
 
           <div class="post-card-meta">
             <span class="meta-chip">
-              Author: <%= post.user.email %>
+              Author: <%= display_author_for_moderator(post.user, context: post) %>
             </span>
             <span class="meta-chip">
               Flagged: <%= time_ago_in_words(post.updated_at) %> ago

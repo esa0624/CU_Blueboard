@@ -22,6 +22,8 @@ Rails.application.routes.draw do
 
   # Moderation namespace for staff/moderator actions
   namespace :moderation do
+    get 'dashboard', to: 'dashboard#index'
+
     resources :posts, only: [ :index, :show ] do
       member do
         patch :redact

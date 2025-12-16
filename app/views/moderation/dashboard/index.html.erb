@@ -1,0 +1,273 @@
+<%#
+  Moderation Statistics Dashboard
+  Displays post activity trends and platform metrics
+%>
+
+<div class="main-content-container">
+  <h2 class="page-title">Statistics Dashboard</h2>
+  <p class="post-meta">Platform activity and moderation metrics</p>
+
+  <hr class="section-divider">
+
+  <%# Summary Statistics Cards %>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value"><%= @stats[:total_posts] %></div>
+      <div class="stat-label">Total Posts</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= @stats[:total_answers] %></div>
+      <div class="stat-label">Total Answers</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= @stats[:total_users] %></div>
+      <div class="stat-label">Total Users</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= @stats[:response_rate] %>%</div>
+      <div class="stat-label">Response Rate</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= @stats[:resolution_rate] %>%</div>
+      <div class="stat-label">Resolution Rate</div>
+    </div>
+    <div class="stat-card stat-card-warning">
+      <div class="stat-value"><%= @stats[:redacted_posts] %></div>
+      <div class="stat-label">Redacted Posts</div>
+    </div>
+    <div class="stat-card stat-card-danger">
+      <div class="stat-value"><%= @stats[:ai_flagged_posts] %></div>
+      <div class="stat-label">AI Flagged</div>
+    </div>
+    <div class="stat-card stat-card-info">
+      <div class="stat-value"><%= @stats[:reported_posts] %></div>
+      <div class="stat-label">User Reported</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+
+  <%# Charts Section %>
+  <div class="charts-grid">
+    <div class="chart-container">
+      <h3 class="chart-title">Daily Post Activity (Last 30 Days)</h3>
+      <canvas id="dailyPostsChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <h3 class="chart-title">Posts by Topic</h3>
+      <canvas id="topicDistributionChart"></canvas>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+
+  <%# Quick Links %>
+  <div class="quick-links">
+    <h3 class="comments-title">Quick Actions</h3>
+    <div class="quick-links-grid">
+      <%= link_to moderation_posts_path, class: "quick-link-card" do %>
+        <span class="quick-link-icon">📋</span>
+        <span class="quick-link-text">Moderation Queue</span>
+      <% end %>
+      <%= link_to posts_path, class: "quick-link-card" do %>
+        <span class="quick-link-icon">📝</span>
+        <span class="quick-link-text">All Posts</span>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<%# Chart.js CDN %>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Daily Posts Line Chart
+    const dailyData = <%= raw @daily_posts.to_json %>;
+    const sortedDates = Object.keys(dailyData).sort();
+    const postCounts = sortedDates.map(date => dailyData[date]);
+
+    const dailyCtx = document.getElementById('dailyPostsChart').getContext('2d');
+    new Chart(dailyCtx, {
+      type: 'line',
+      data: {
+        labels: sortedDates.map(date => {
+          const d = new Date(date);
+          return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }),
+        datasets: [{
+          label: 'Posts',
+          data: postCounts,
+          borderColor: '#007bff',
+          backgroundColor: 'rgba(0, 123, 255, 0.1)',
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 1 }
+          }
+        }
+      }
+    });
+
+    // Topic Distribution Pie Chart
+    const topicData = <%= raw @topic_distribution.to_json %>;
+    const topicLabels = Object.keys(topicData);
+    const topicCounts = Object.values(topicData);
+
+    const colors = [
+      '#007bff', '#28a745', '#ffc107', '#dc3545', '#17a2b8',
+      '#6f42c1', '#fd7e14', '#20c997', '#e83e8c', '#6c757d'
+    ];
+
+    const topicCtx = document.getElementById('topicDistributionChart').getContext('2d');
+    new Chart(topicCtx, {
+      type: 'doughnut',
+      data: {
+        labels: topicLabels,
+        datasets: [{
+          data: topicCounts,
+          backgroundColor: colors.slice(0, topicLabels.length),
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { padding: 20 }
+          }
+        }
+      }
+    });
+  });
+</script>
+
+<style>
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+
+  .stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #007bff;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+
+  .stat-card-warning {
+    border-left-color: #ffc107;
+  }
+
+  .stat-card-danger {
+    border-left-color: #dc3545;
+  }
+
+  .stat-card-info {
+    border-left-color: #17a2b8;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #111;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin: 1.5rem 0;
+  }
+
+  .chart-container {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .chart-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #f0f0f0;
+  }
+
+  .quick-links-grid {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+  }
+
+  .quick-link-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    text-decoration: none;
+    color: #333;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .quick-link-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    text-decoration: none;
+    color: #007bff;
+  }
+
+  .quick-link-icon {
+    font-size: 1.5rem;
+  }
+
+  .quick-link-text {
+    font-weight: 500;
+  }
+
+  @media (max-width: 768px) {
+    .charts-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>
