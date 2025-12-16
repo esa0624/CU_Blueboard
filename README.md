@@ -144,7 +144,7 @@ CU Blueboard is an **anonymous Q&A platform** exclusively for verified Columbia/
 - **Resource Sidebar**: Added static resources panel with essential campus links (Counseling \& Psychological Services, Public Safety, Student Health, Disability Services, etc.) visible throughout the application, providing quick access to critical student support services without leaving the Q\&A platform.
 - **Reporting System**: Integrated user-initiated content flagging via "Flag Content" button on posts, allowing students to report policy violations, with flagged posts appearing in the moderation dashboard (`/moderation/posts`) for staff review, creating a community-driven moderation layer alongside automated AI screening.
 - **Test Login for TAs/Graders**: Added two test login buttons on the login page ("Test as User" and "Test as Moderator") that instantly authenticate as pre-configured accounts (`testuser@columbia.edu` or `testmoderator@columbia.edu`) without requiring Google OAuth setup, allowing TAs to quickly test all features and verify permission boundaries between regular users and moderators, implemented via `TestSessionsController` with full RSpec and Cucumber coverage.
-- **100% Test Coverage**: Achieved 100% line coverage (927/927) and 100% branch coverage (283/283) across both RSpec (414 examples) and Cucumber (48 scenarios, 343 steps) test suites, with comprehensive moderation scenarios covering redaction, security boundaries, and automated OpenAI content screening.
+- **100% Test Coverage**: Achieved 100% line coverage (990/990) and 100% branch coverage (303/303) across both RSpec (452 examples) and Cucumber (65 scenarios, 483 steps) test suites, with comprehensive moderation scenarios covering redaction, security boundaries, and automated OpenAI content screening.
 
 ## Test Suites
 ```bash
@@ -156,9 +156,9 @@ bundle exec cucumber
 ```
 
 ### RSpec coverage
-- **Overall:** 414 examples, 0 failures
-- **Line Coverage:** 100% (927/927)
-- **Branch Coverage:** 100% (283/283)
+- **Overall:** 452 examples, 0 failures
+- **Line Coverage:** 100% (990/990)
+- **Branch Coverage:** 100% (303/303)
 
 **Models** (13 specs)
 - `spec/models/post_spec.rb`: validations, taxonomy limits, search helper, expiration logic, thread-identity callback
@@ -219,9 +219,9 @@ bundle exec cucumber
 
 
 ### Cucumber scenarios
-- **Overall:** 65 scenarios, 483 steps passing in ~2.7s
-- **Standalone Coverage:** 83.5% line (774/927), 55.83% branch (158/283)
-- **Combined Coverage:** 100% line (927/927), 100% branch (283/283) when merged with RSpec
+- **Overall:** 65 scenarios, 483 steps passing in ~3.0s
+- **Standalone Coverage:** 83.5% line (826/990), 55.83% branch (169/303)
+- **Combined Coverage:** 100% line (990/990), 100% branch (303/303) when merged with RSpec
 - **Reports:** Publish to https://reports.cucumber.io by default. Set `CUCUMBER_PUBLISH_QUIET=true` or `--publish-quiet` to silence.
 
 **Posts & Content** (10 features)
