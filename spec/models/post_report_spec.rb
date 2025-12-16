@@ -64,6 +64,15 @@ RSpec.describe PostReport, type: :model do
       expect(report).not_to be_valid
       expect(report.errors[:base]).to include('You cannot report your own post')
     end
+
+    it 'handles nil post gracefully in cannot_report_own_post validation' do
+      report = PostReport.new(user: user, post: nil, reason: 'spam')
+      # Should not raise error when post is nil (safe navigation handles it)
+      # Will be invalid due to post being required, not due to own-post check
+      expect(report).not_to be_valid
+      expect(report.errors[:post]).to include('must exist')
+      expect(report.errors[:base]).not_to include('You cannot report your own post')
+    end
   end
 
   describe 'counter_cache' do

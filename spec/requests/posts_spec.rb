@@ -27,7 +27,8 @@ RSpec.describe "Posts", type: :request do
       get posts_path, params: { filters: { q: '' } }
 
       expect(response.body).to include('Please enter text to search or choose a filter.')
-      expect(response.body).to include('Post List')
+      # Post list renders without a title on the main feed
+      expect(response.body).to include('id="posts"')
     end
   end
 
