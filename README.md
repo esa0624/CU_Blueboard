@@ -647,8 +647,9 @@ CU_Blueboard/
 Based on TA suggestions during the project demo, we implemented the following enhancements to improve the platform's functionality and user experience:
 
 ### Real-time Features (ActionCable)
-- **Live Answer Notifications**: WebSocket-based alerts notify users when someone answers their post in real-time, without page refresh. New answers slide in with a highlight animation.
-- **Typing Indicators**: "Lion #XXXX is typing..." appears when another user is composing an answer, providing better engagement feedback similar to modern chat applications.
+- **Live Answer Updates (Post Detail Page)**: When viewing a specific post, new answers appear automatically without page refresh. New answers slide in with a highlight animation and a brief "New answer posted!" notification.
+- **Typing Indicators (Post Detail Page)**: "Lion #XXXX is typing..." appears when another user is composing an answer on the same post page.
+- **Scope**: These features work only when users are actively viewing the same post detail page. This is a real-time collaboration feature rather than a global notification system.
 - **Technical Implementation**: Uses Rails ActionCable with Solid Cable (database-backed adapter) for Heroku compatibility. Stimulus controllers handle client-side WebSocket subscriptions.
 
 ### Moderator Statistics Dashboard
@@ -668,6 +669,16 @@ Based on TA suggestions during the project demo, we implemented the following en
 - Warden integration for ActionCable authentication (reuses Devise sessions)
 - 100% test coverage maintained with new channel specs and controller tests
 - All features are Heroku-ready (no Redis required - uses Solid Cable with database adapter)
+
+### Regarding Academic Integrity
+For the question about how moderators would automatically handle academic integrity violations, we implemented a user-driven reporting system. When a post receives 3 or more reports, it gets flagged for priority moderator review. Fully automated detection proved difficult because distinguishing between legitimate academic discussion and integrity violations requires contextual judgment that even major platforms struggle to automate effectively. That said, we aimed to leverage our platform's core strengths: anonymity to encourage honest questions and Columbia-exclusive access to foster a trusted community environment.
+
+### Reflection
+We are sincerely grateful to the TAs and Professor Yang for providing such detailed and thoughtful feedback throughout the semester. Their comments consistently pointed out aspects we had not considered, pushing us to think more deeply about service improvement and user experience. We focused on each piece of feedback and worked to address it meaningfully in our iterations.
+
+The practical, real-world perspectives shared during lectures were genuinely valuable. **Chih-hsin Chen** and **Seung Jae Hong** attended the early morning classes regularly and found the discussions on software engineering practices, testing strategies, and product thinking to be incredibly insightful. These sessions shaped how we approached the project and helped us develop a more thoughtful engineering mindset.
+
+Thank you for a rewarding semester.
 
 ## Frequently Asked Questions
 
