@@ -30,6 +30,20 @@ RSpec.describe "Answers", type: :request do
         follow_redirect!
         expect(response.body).to include('Answer added.')
       end
+
+      it "broadcasts the new answer via PostChannel" do
+        sign_in user
+
+        # Stub ApplicationController.render to prevent partial rendering issues in test
+        allow(ApplicationController).to receive(:render).and_return('<div>Answer HTML</div>')
+
+        expect(PostChannel).to receive(:broadcast_to).with(
+          post_record,
+          hash_including(action: 'new_answer', html: '<div>Answer HTML</div>')
+        )
+
+        post post_answers_path(post_record), params: { answer: { body: "Test broadcast" } }
+      end
     end
 
     context "when the thread is locked" do
