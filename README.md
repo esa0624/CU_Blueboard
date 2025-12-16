@@ -138,7 +138,7 @@ CU Blueboard is an **anonymous Q&A platform** exclusively for verified Columbia/
 - **Resource Sidebar**: Added static resources panel with essential campus links (Counseling \& Psychological Services, Public Safety, Student Health, Disability Services, etc.) visible throughout the application, providing quick access to critical student support services without leaving the Q\&A platform.
 - **Reporting System**: Integrated user-initiated content flagging via "Flag Content" button on posts, allowing students to report policy violations, with flagged posts appearing in the moderation dashboard (`/moderation/posts`) for staff review, creating a community-driven moderation layer alongside automated AI screening.
 - **Test Login for TAs/Graders**: Added two test login buttons on the login page ("Test as User" and "Test as Moderator") that instantly authenticate as pre-configured accounts (`testuser@columbia.edu` or `testmoderator@columbia.edu`) without requiring Google OAuth setup, allowing TAs to quickly test all features and verify permission boundaries between regular users and moderators, implemented via `TestSessionsController` with full RSpec and Cucumber coverage.
-- **100% Test Coverage**: Achieved 100% line coverage (1021/1021) and 100% branch coverage (321/321) across both RSpec (497 examples) and Cucumber (65 scenarios, 483 steps) test suites, with comprehensive moderation scenarios covering redaction, security boundaries, and automated OpenAI content screening.
+- **100% Test Coverage**: Achieved 100% line coverage (990/990) and 100% branch coverage (315/315) across both RSpec (499 examples) and Cucumber (68 scenarios, 486 steps) test suites, with comprehensive moderation scenarios covering redaction, security boundaries, and automated OpenAI content screening.
 
 ## Test Suites
 ```bash
@@ -150,9 +150,9 @@ bundle exec cucumber
 ```
 
 ### RSpec coverage
-- **Overall:** 469 examples, 0 failures
-- **Line Coverage:** 100% (997/997)
-- **Branch Coverage:** 100% (311/311)
+- **Overall:** 499 examples, 0 failures
+- **Line Coverage:** 100% (990/990)
+- **Branch Coverage:** 100% (315/315)
 
 **Models** (13 specs)
 - `spec/models/post_spec.rb`: validations, taxonomy limits, search helper, expiration logic, thread-identity callback
@@ -172,7 +172,7 @@ bundle exec cucumber
 - `spec/requests/answer_comments_spec.rb`: comment create/delete permissions
 - `spec/requests/bookmarks_spec.rb`: bookmark/unbookmark endpoints, listing
 - `spec/requests/likes_spec.rb`, `spec/requests/answer_likes_spec.rb`, `spec/requests/answer_comment_likes_spec.rb`: voting endpoints
-- `spec/requests/pages_spec.rb`: static pages rendering
+- `spec/requests/pages_spec.rb`: static pages rendering 
 
 **Request Specs - Advanced Features** (5 specs)
 - `spec/requests/school_filter_spec.rb`: school-specific filtering (Columbia/Barnard)
@@ -214,9 +214,9 @@ bundle exec cucumber
 
 
 ### Cucumber scenarios
-- **Overall:** 65 scenarios, 483 steps passing in ~3.0s
-- **Standalone Coverage:** 83.5% line (826/990), 55.83% branch (169/303)
-- **Combined Coverage:** 100% line (990/990), 100% branch (303/303) when merged with RSpec
+- **Overall:** 68 scenarios, 486 steps passing in ~55s
+- **Standalone Coverage:** 91.57% line (923/1008), 85.21% branch (265/311)
+- **Combined Coverage:** 100% line (990/990), 100% branch (315/315) when merged with RSpec
 - **Reports:** Publish to https://reports.cucumber.io by default. Set `CUCUMBER_PUBLISH_QUIET=true` or `--publish-quiet` to silence.
 
 **Posts & Content** (10 features)
@@ -261,7 +261,7 @@ open coverage/index.html
 ```
 
 **Target:** 100% statement and branch coverage
-**Local test results:** 100% line coverage, 100% branch coverage (after running both suites)
+**Local test results:** 100% line coverage (990/990), 100% branch coverage (315/315) (after running both suites)
 
 Running the test suites will generate a detailed coverage report in `coverage/index.html`.
 
@@ -667,7 +667,7 @@ Based on TA suggestions during the project demo, we implemented the following en
 ### Technical Notes
 - ActionCable channels: `PostChannel` (answer notifications), `TypingChannel` (typing indicators)
 - Warden integration for ActionCable authentication (reuses Devise sessions)
-- 100% test coverage maintained with new channel specs and controller tests
+- 100% test coverage maintained (990/990 lines, 315/315 branches) with new channel specs and controller tests
 - All features are Heroku-ready (no Redis required - uses Solid Cable with database adapter)
 
 ### Regarding Academic Integrity

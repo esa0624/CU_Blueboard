@@ -9,7 +9,7 @@ Feature: Handling system failures and edge cases
     And a post titled "Test Post" exists
 
   Scenario: Reporting a post fails due to system error
-    Given the next update to the post will fail
+    Given the next save to the report will fail
     When I visit the post titled "Test Post"
     And I click "Flag Content"
     Then I should see "Unable to flag content."

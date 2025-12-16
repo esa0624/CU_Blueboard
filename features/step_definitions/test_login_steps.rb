@@ -13,5 +13,5 @@ end
 Then('I should be signed in as {string}') do |email|
   expect(page).to have_content('Logout')
   # Verify we are on the feed page by checking for feed-specific elements
-  expect(page).to have_content('Post List')
+  expect(page).to have_content('Create Post')
 end

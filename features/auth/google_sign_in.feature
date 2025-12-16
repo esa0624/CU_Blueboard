@@ -8,7 +8,7 @@ Feature: Sign in with Google SSO
     Given a user exists with email "lion@columbia.edu" and password "Password123!"
     And OmniAuth is mocked for "lion@columbia.edu"
     When I finish Google login
-    Then I should see "Post List"
+    Then I should see "Create Post"
     And I should see "My threads"
 
   Scenario: Non-campus email is rejected during Google login

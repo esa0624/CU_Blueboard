@@ -182,7 +182,7 @@ When('I reveal my identity on the post titled {string}') do |title|
   user ||= post.user
   login_as(user, scope: :user)
   visit Rails.application.routes.url_helpers.post_path(post)
-  click_button 'Reveal My Identity'
+  click_button 'Reveal Identity'
 end
 
 When('I reveal my identity on the most recent answer') do

@@ -11,7 +11,7 @@ Feature: Reporting posts
   Scenario: Student flags a post for review
     When I visit the post titled "Questionable Post"
     And I click "Flag Content"
-    Then I should see "Content flagged for moderator review."
+    Then I should see "Content reported to moderators."
 
   Scenario: Moderator dismisses a reported post
     Given a user exists with email "mod@columbia.edu" and password "Password123!"
@@ -21,4 +21,4 @@ Feature: Reporting posts
     And I sign in with email "mod@columbia.edu" and password "Password123!"
     When I visit the post titled "Questionable Post"
     And I click "Dismiss Flag"
-    Then I should see "Flag dismissed."
+    Then I should see "All reports dismissed."

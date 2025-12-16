@@ -6,23 +6,43 @@
   <h2 class="page-title">Moderation Dashboard</h2>
   <p class="post-meta">Manage redacted and flagged content</p>
 
+  <%# Statistics Dashboard 버튼 %>
+  <div class="dashboard-nav">
+    <%= link_to moderation_dashboard_path, class: "mod-btn mod-btn-stats" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -3px; margin-right: 6px;">
+        <line x1="18" y1="20" x2="18" y2="10"></line>
+        <line x1="12" y1="20" x2="12" y2="4"></line>
+        <line x1="6" y1="20" x2="6" y2="14"></line>
+      </svg>
+      View Statistics Dashboard
+    <% end %>
+  </div>
+
   <hr class="section-divider">
 
-  <%# Redacted Posts Section %>
-  <% redacted_total = @redacted_posts.respond_to?(:total_count) ? @redacted_posts.total_count : @redacted_posts.size %>
-  <h3 class="comments-title">Redacted Posts (<%= redacted_total %>)</h3>
+  <%# AI-Flagged Posts Section (moved to top) %>
+  <% ai_flagged_total = @ai_flagged_posts.respond_to?(:total_count) ? @ai_flagged_posts.total_count : @ai_flagged_posts.size %>
+  <h3 class="comments-title">AI-Flagged Posts (<%= ai_flagged_total %>)</h3>
+  <p class="post-meta">Posts automatically flagged by OpenAI Moderation API awaiting human review</p>
 
-  <% if @redacted_posts.any? %>
+  <% if @ai_flagged_posts.any? %>
     <div class="posts-list">
-      <% @redacted_posts.each do |post| %>
-        <div class="post-card" id="post-<%= post.id %>">
+      <% @ai_flagged_posts.each do |post| %>
+        <div class="post-card ai-flagged-card" id="post-<%= post.id %>">
           <div class="post-card-header">
             <h3 class="post-title">
               <%= link_to post.title, post_path(post) %>
             </h3>
-            <span class="post-card-status <%= post.redaction_state %>">
-              <%= post.redaction_state.humanize %>
-            </span>
+            <div class="status-badges">
+              <span class="post-card-status ai-flagged">
+                AI Flagged
+              </span>
+              <% if post.appeal_requested? %>
+                <span class="post-card-status appeal-requested">
+                  Appeal Requested
+                </span>
+              <% end %>
+            </div>
           </div>
 
           <div class="post-card-meta">
@@ -30,44 +50,60 @@
               Author: <%= display_author_for_moderator(post.user, context: post) %>
             </span>
             <span class="meta-chip">
-              Redacted by: <%= post.redacted_by&.email || 'Unknown' %>
+              Flagged: <%= time_ago_in_words(post.updated_at) %> ago
             </span>
             <span class="meta-chip">
-              Reason: <%= post.redacted_reason&.humanize || 'Not specified' %>
-            </span>
-            <span class="meta-chip">
-              <%= time_ago_in_words(post.updated_at) %> ago
+              Topic: <%= post.topic&.name || 'N/A' %>
             </span>
           </div>
 
+          <%# AI Categories %>
+          <% if post.ai_categories.present? %>
+            <div class="ai-categories">
+              <% post.ai_categories.each do |category, flagged| %>
+                <% if flagged %>
+                  <% score = post.ai_scores&.dig(category) %>
+                  <span class="category-badge category-<%= category %>">
+                    <%= category.titleize %><% if score %> (<%= (score * 100).round %>%)<% end %>
+                  </span>
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+
           <div class="post-card-actions">
-            <%= link_to "View Post", post_path(post), class: "mod-btn mod-btn-review" %>
-            <%= link_to "Details", moderation_post_path(post), class: "mod-btn mod-btn-details" %>
-            <%= button_to "Restore",
-                          unredact_moderation_post_path(post),
+            <%= link_to "Review Post", post_path(post), class: "mod-btn mod-btn-review" %>
+            <%= button_to "Redact",
+                          redact_moderation_post_path(post),
+                          method: :patch,
+                          params: { reason: 'ai_flagged_content', state: 'redacted' },
+                          class: "mod-btn mod-btn-redact",
+                          data: { turbo_confirm: "Redact this AI-flagged post?" } %>
+            <%= button_to "Approve",
+                          clear_ai_flag_post_path(post),
                           method: :patch,
                           class: "mod-btn mod-btn-approve",
-                          data: { turbo_confirm: "Restore this post?" } %>
+                          data: { turbo_confirm: "Clear AI flag and approve this post?" } %>
           </div>
         </div>
       <% end %>
     </div>
 
-    <%# Pagination %>
-    <% if respond_to?(:paginate) %>
+    <%# Pagination for AI-flagged %>
+    <% if respond_to?(:paginate) && @ai_flagged_posts.respond_to?(:total_pages) %>
       <div class="pagination-container">
-        <%= paginate @redacted_posts %>
+        <%= paginate @ai_flagged_posts, param_name: :ai_page %>
       </div>
     <% end %>
   <% else %>
     <div class="empty-state">
-      <p>No redacted posts at this time.</p>
+      <p>No AI-flagged posts at this time. Content screening is working automatically in the background.</p>
     </div>
   <% end %>
 
   <hr class="section-divider">
 
-  <%# User-Reported Posts Section %>
+  <%# User-Reported Posts Section (moved to second) %>
   <% reported_total = @reported_posts.respond_to?(:total_count) ? @reported_posts.total_count : @reported_posts.size %>
   <% urgent_count = @reported_posts.count { |p| p.reports_count >= 3 } %>
   <h3 class="comments-title">User-Reported Posts (<%= reported_total %>)</h3>
@@ -144,29 +180,21 @@
 
   <hr class="section-divider">
 
-  <%# AI-Flagged Posts Section %>
-  <% ai_flagged_total = @ai_flagged_posts.respond_to?(:total_count) ? @ai_flagged_posts.total_count : @ai_flagged_posts.size %>
-  <h3 class="comments-title">AI-Flagged Posts (<%= ai_flagged_total %>)</h3>
-  <p class="post-meta">Posts automatically flagged by OpenAI Moderation API awaiting human review</p>
+  <%# Redacted Posts Section (moved to third) %>
+  <% redacted_total = @redacted_posts.respond_to?(:total_count) ? @redacted_posts.total_count : @redacted_posts.size %>
+  <h3 class="comments-title">Redacted Posts (<%= redacted_total %>)</h3>
 
-  <% if @ai_flagged_posts.any? %>
+  <% if @redacted_posts.any? %>
     <div class="posts-list">
-      <% @ai_flagged_posts.each do |post| %>
-        <div class="post-card ai-flagged-card" id="post-<%= post.id %>">
+      <% @redacted_posts.each do |post| %>
+        <div class="post-card" id="post-<%= post.id %>">
           <div class="post-card-header">
             <h3 class="post-title">
               <%= link_to post.title, post_path(post) %>
             </h3>
-            <div class="status-badges">
-              <span class="post-card-status ai-flagged">
-                AI Flagged
-              </span>
-              <% if post.appeal_requested? %>
-                <span class="post-card-status appeal-requested">
-                  Appeal Requested
-                </span>
-              <% end %>
-            </div>
+            <span class="post-card-status <%= post.redaction_state %>">
+              <%= post.redaction_state.humanize %>
+            </span>
           </div>
 
           <div class="post-card-meta">
@@ -174,40 +202,24 @@
               Author: <%= display_author_for_moderator(post.user, context: post) %>
             </span>
             <span class="meta-chip">
-              Flagged: <%= time_ago_in_words(post.updated_at) %> ago
+              Redacted by: <%= post.redacted_by&.email || 'Unknown' %>
             </span>
             <span class="meta-chip">
-              Topic: <%= post.topic&.name || 'N/A' %>
+              Reason: <%= post.redacted_reason&.humanize || 'Not specified' %>
+            </span>
+            <span class="meta-chip">
+              <%= time_ago_in_words(post.updated_at) %> ago
             </span>
           </div>
 
-          <%# AI Categories %>
-          <% if post.ai_categories.present? %>
-            <div class="ai-categories">
-              <% post.ai_categories.each do |category, flagged| %>
-                <% if flagged %>
-                  <% score = post.ai_scores&.dig(category) %>
-                  <span class="category-badge category-<%= category %>">
-                    <%= category.titleize %><% if score %> (<%= (score * 100).round %>%)<% end %>
-                  </span>
-                <% end %>
-              <% end %>
-            </div>
-          <% end %>
-
           <div class="post-card-actions">
-            <%= link_to "Review Post", post_path(post), class: "mod-btn mod-btn-review" %>
-            <%= button_to "Redact",
-                          redact_moderation_post_path(post),
-                          method: :patch,
-                          params: { reason: 'ai_flagged_content', state: 'redacted' },
-                          class: "mod-btn mod-btn-redact",
-                          data: { turbo_confirm: "Redact this AI-flagged post?" } %>
-            <%= button_to "Approve",
-                          clear_ai_flag_post_path(post),
+            <%= link_to "View Post", post_path(post), class: "mod-btn mod-btn-review" %>
+            <%= link_to "Details", moderation_post_path(post), class: "mod-btn mod-btn-details" %>
+            <%= button_to "Restore",
+                          unredact_moderation_post_path(post),
                           method: :patch,
                           class: "mod-btn mod-btn-approve",
-                          data: { turbo_confirm: "Clear AI flag and approve this post?" } %>
+                          data: { turbo_confirm: "Restore this post?" } %>
           </div>
         </div>
       <% end %>
@@ -216,17 +228,35 @@
     <%# Pagination %>
     <% if respond_to?(:paginate) %>
       <div class="pagination-container">
-        <%= paginate @ai_flagged_posts %>
+        <%= paginate @redacted_posts %>
       </div>
     <% end %>
   <% else %>
     <div class="empty-state">
-      <p>No AI-flagged posts at this time. Content screening is working automatically in the background.</p>
+      <p>No redacted posts at this time.</p>
     </div>
   <% end %>
 </div>
 
 <style>
+  .dashboard-nav {
+    margin: 1em 0;
+  }
+
+  .mod-btn-stats {
+    background-color: #6f42c1;
+    color: white;
+    border: 2px solid #6f42c1;
+  }
+
+  .mod-btn-stats:hover {
+    background-color: #5a32a3;
+    border-color: #5a32a3;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(111, 66, 193, 0.3);
+    color: white;
+    text-decoration: none;
+  }
   .status-badges {
     display: flex;
     gap: 0.5em;

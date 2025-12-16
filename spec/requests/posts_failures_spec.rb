@@ -28,6 +28,19 @@ RSpec.describe "Posts Controller Failures", type: :request do
       follow_redirect!
       expect(response.body).to include('You cannot report your own post.')
     end
+
+    it "uses fallback message when report fails without error messages" do
+      allow_any_instance_of(PostReport).to receive(:save).and_return(false)
+      allow_any_instance_of(PostReport).to receive(:errors).and_return(
+        double(full_messages: [])
+      )
+
+      post report_post_path(post_record)
+
+      expect(response).to redirect_to(post_path(post_record))
+      follow_redirect!
+      expect(response.body).to include('Unable to flag content.')
+    end
   end
 
   describe "DELETE /posts/:id/dismiss_flag" do
@@ -43,6 +56,18 @@ RSpec.describe "Posts Controller Failures", type: :request do
         expect(response).to redirect_to(post_path(post_record))
         follow_redirect!
         expect(response.body).to include('All reports dismissed.')
+      end
+
+      it "alerts when dismiss fails" do
+        create(:post_report, user: user, post: post_record)
+        post_record.update!(reported: true, reported_at: Time.current)
+        allow_any_instance_of(Post).to receive(:update).and_return(false)
+
+        delete dismiss_flag_post_path(post_record)
+
+        expect(response).to redirect_to(post_path(post_record))
+        follow_redirect!
+        expect(response.body).to include('Unable to dismiss flag.')
       end
     end
 

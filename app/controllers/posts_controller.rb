@@ -183,15 +183,19 @@ class PostsController < ApplicationController
                    reported_reason: "#{@post.reports_count} report(s)")
       redirect_to @post, notice: 'Content reported to moderators.'
     else
-      redirect_to @post, alert: report.errors.full_messages.to_sentence
+      error_message = report.errors.full_messages.presence&.to_sentence || 'Unable to flag content.'
+      redirect_to @post, alert: error_message
     end
   end
 
   def dismiss_flag
     if current_user.can_moderate?
       @post.post_reports.destroy_all
-      @post.update(reported: false, reported_at: nil, reported_reason: nil)
-      redirect_to @post, notice: 'All reports dismissed.'
+      if @post.update(reported: false, reported_at: nil, reported_reason: nil)
+        redirect_to @post, notice: 'All reports dismissed.'
+      else
+        redirect_to @post, alert: 'Unable to dismiss flag.'
+      end
     else
       report = @post.post_reports.find_by(user: current_user)
       if report&.destroy
