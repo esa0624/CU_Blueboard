@@ -56,6 +56,18 @@ RSpec.describe "Post Reporting", type: :request do
         follow_redirect!
         expect(response.body).to include('You cannot report your own post.')
       end
+
+      it "shows error when report save fails" do
+        allow_any_instance_of(PostReport).to receive(:save).and_return(false)
+        errors = double('errors', full_messages: [ 'Validation failed' ])
+        allow_any_instance_of(PostReport).to receive(:errors).and_return(errors)
+
+        post report_post_path(post_record), params: { reason: 'inappropriate' }
+
+        expect(response).to redirect_to(post_path(post_record))
+        follow_redirect!
+        expect(response.body).to include('Validation failed')
+      end
     end
   end
 

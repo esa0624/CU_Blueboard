@@ -4,53 +4,58 @@
 
 <div class="main-content-container" data-controller="post-show realtime" data-realtime-post-id-value="<%= @post.id %>">
 
-  <%# --- Post title and author information --- %>
+  <%# --- Post title and author information (2-line compact layout) --- %>
   <h2 class="page-title"><%= @post.title %></h2>
-  <div class="post-meta-header">
-    <div class="post-meta">
+
+  <%# Line 1: Author · Time · Expiration %>
+  <div class="post-meta-line">
+    <div class="post-meta-info">
       <span class="post-author">
-        Posted by: <strong><%= display_author(@post.user, context: @post) %></strong>
+        <strong><%= display_author(@post.user, context: @post) %></strong>
         <% if current_user == @post.user && !@post.show_real_identity? %>
           <span class="anonymous-badge">(anonymous)</span>
         <% end %>
       </span>
+      <span class="meta-separator">·</span>
       <span class="post-time"><%= time_ago_in_words(@post.created_at) %> ago</span>
-    </div>
-    <% if current_user == @post.user %>
-      <% if !@post.show_real_identity? %>
-        <%= button_to "Reveal My Identity",
-                      reveal_identity_post_path(@post),
-                      method: :patch,
-                      class: "btn-reveal-inline",
-                      data: { turbo_confirm: "Reveal your real identity on this thread?" } %>
-      <% else %>
-        <%= button_to "Hide My Identity",
-                      hide_identity_post_path(@post),
-                      method: :patch,
-                      class: "btn-hide-inline",
-                      data: { turbo_confirm: "Return to anonymous mode?" } %>
+      <% if @post.expires_at.present? %>
+        <span class="meta-separator">·</span>
+        <span class="post-expiry">Expires <%= time_ago_in_words(@post.expires_at) %></span>
       <% end %>
-    <% elsif @post.show_real_identity? %>
-      <p class="identity-revealed-badge">Author chose to reveal their identity.</p>
-    <% end %>
+    </div>
+    <div class="post-meta-actions">
+      <% if current_user == @post.user %>
+        <% if !@post.show_real_identity? %>
+          <%= button_to "Reveal Identity",
+                        reveal_identity_post_path(@post),
+                        method: :patch,
+                        class: "btn-identity-toggle",
+                        data: { turbo_confirm: "Reveal your real identity on this thread?" } %>
+        <% else %>
+          <%= button_to "Hide Identity",
+                        hide_identity_post_path(@post),
+                        method: :patch,
+                        class: "btn-identity-toggle btn-hide",
+                        data: { turbo_confirm: "Return to anonymous mode?" } %>
+        <% end %>
+      <% elsif @post.show_real_identity? %>
+        <span class="identity-revealed-label">Identity revealed</span>
+      <% end %>
+    </div>
   </div>
 
-  <% if @post.expires_at.present? %>
-    <p class="identity-badge">Expires <%= time_ago_in_words(@post.expires_at) %> from now</p>
-  <% end %>
-
-  <div class="post-card-meta">
-    <span class="meta-chip">Topic: <%= @post.topic&.name %></span>
-    
+  <%# Line 2: All metadata chips (Topic, Status, School, Course, Tags) %>
+  <div class="post-chips-line">
+    <span class="chip chip-topic"><%= @post.topic&.name %></span>
     <% status_class = case @post.status
-       when 'solved' then 'status-solved'
-       when 'locked' then 'status-locked'
-       else 'status-open'
+       when 'solved' then 'chip-solved'
+       when 'locked' then 'chip-locked'
+       else 'chip-open'
        end %>
-    <span class="meta-chip <%= status_class %>">
-      Status: <%= @post.status.humanize %>
+    <span class="chip <%= status_class %>">
+      <%= @post.status.humanize %>
       <span class="status-help-icon" data-tooltip="Solved: Author accepted answer. Locked: Moderator closed thread.">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="16" x2="12" y2="12"></line>
           <line x1="12" y1="8" x2="12.01" y2="8"></line>
@@ -58,20 +63,15 @@
       </span>
     </span>
     <% if @post.school.present? %>
-      <span class="meta-chip">School: <%= @post.school %></span>
+      <span class="chip chip-school"><%= @post.school %></span>
     <% end %>
     <% if @post.course_code.present? %>
-      <span class="meta-chip">Course: <%= @post.course_code %></span>
+      <span class="chip chip-course"><%= @post.course_code %></span>
+    <% end %>
+    <% @post.tags.each do |tag| %>
+      <span class="chip chip-tag"><%= tag.name %></span>
     <% end %>
   </div>
-
-  <% if @post.tags.any? %>
-    <div class="post-card-tags">
-      <% @post.tags.each do |tag| %>
-        <span class="tag-chip readonly"><%= tag.name %></span>
-      <% end %>
-    </div>
-  <% end %>
 
   <% if @post.locked? %>
     <p class="identity-badge">Thread locked after accepting an answer.</p>
@@ -292,7 +292,7 @@
                       params: { reason: 'policy_violation', state: 'redacted' },
                       data: { turbo_confirm: "Redact this post for policy violations?" } %>
       <% end %>
-      <% if user_signed_in? && @post.user != current_user && !current_user.can_moderate? %>
+      <% if user_signed_in? && @post.user != current_user %>
         <% if @post.reported_by?(current_user) %>
           <%= button_to "Remove My Report",
                         dismiss_flag_post_path(@post),
@@ -308,19 +308,19 @@
             <div class="report-menu" style="display: none;">
               <p class="report-menu-title">Why are you reporting?</p>
               <%= button_to report_post_path(@post), method: :post, params: {reason: 'inappropriate'}, class: "report-option" do %>
-                <span class="report-option-icon">&#9888;</span> Inappropriate
+                <span class="report-option-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span> Inappropriate
               <% end %>
               <%= button_to report_post_path(@post), method: :post, params: {reason: 'harassment'}, class: "report-option" do %>
-                <span class="report-option-icon">&#128545;</span> Harassment
+                <span class="report-option-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/></svg></span> Harassment
               <% end %>
               <%= button_to report_post_path(@post), method: :post, params: {reason: 'spam'}, class: "report-option" do %>
-                <span class="report-option-icon">&#128230;</span> Spam
+                <span class="report-option-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg></span> Spam
               <% end %>
               <%= button_to report_post_path(@post), method: :post, params: {reason: 'misinformation'}, class: "report-option" do %>
-                <span class="report-option-icon">&#128269;</span> Misinformation
+                <span class="report-option-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg></span> Misinformation
               <% end %>
               <%= button_to report_post_path(@post), method: :post, params: {reason: 'other'}, class: "report-option" do %>
-                <span class="report-option-icon">&#8226;</span> Other
+                <span class="report-option-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></span> Other
               <% end %>
             </div>
           </div>
@@ -583,62 +583,165 @@
 </div>
 
 <style>
-  /* Author Meta Header */
-  .post-meta-header {
+  /* 2-Line Compact Layout */
+  .post-meta-line {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1em;
+    margin-bottom: 0.75em;
     flex-wrap: wrap;
-    gap: 1em;
+    gap: 0.5em;
+  }
+
+  .post-meta-info {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35em;
+    font-size: 0.9em;
+    color: #6c757d;
+  }
+
+  .post-author {
+    color: #495057;
+  }
+
+  .post-author strong {
+    color: #212529;
   }
 
   .anonymous-badge {
     color: #6c757d;
-    font-size: 0.9em;
+    font-size: 0.85em;
     font-weight: normal;
-    margin-left: 0.5em;
+    margin-left: 0.25em;
   }
 
-  .btn-reveal-inline {
-    padding: 0.4em 1em;
+  .meta-separator {
+    color: #adb5bd;
+    font-weight: 300;
+  }
+
+  .post-time {
+    color: #6c757d;
+  }
+
+  .post-expiry {
+    color: #856404;
+    font-weight: 500;
+  }
+
+  .post-meta-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+  }
+
+  .btn-identity-toggle {
+    padding: 0.3em 0.75em;
     background-color: #17a2b8;
     color: white;
     border: none;
-    border-radius: 6px;
-    font-size: 0.9em;
+    border-radius: 4px;
+    font-size: 0.8em;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.2s;
   }
 
-  .btn-reveal-inline:hover {
+  .btn-identity-toggle:hover {
     background-color: #138496;
   }
 
-  .btn-hide-inline {
-    padding: 0.4em 1em;
+  .btn-identity-toggle.btn-hide {
     background-color: #6c757d;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 0.9em;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
   }
 
-  .btn-hide-inline:hover {
+  .btn-identity-toggle.btn-hide:hover {
     background-color: #5a6268;
   }
 
-  .identity-revealed-badge {
-    padding: 0.4em 1em;
-    background-color: #d1ecf1;
-    border: 1px solid #bee5eb;
-    border-radius: 6px;
-    font-size: 0.9em;
+  .identity-revealed-label {
+    font-size: 0.8em;
     color: #0c5460;
+    background-color: #d1ecf1;
+    padding: 0.25em 0.5em;
+    border-radius: 4px;
+  }
+
+  /* Chips Line (All metadata in one row) */
+  .post-chips-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5em;
+    margin-bottom: 1em;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2em 0.6em;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 500;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    color: #495057;
+  }
+
+  .chip-topic {
+    background-color: #e3f2fd;
+    border-color: #90caf9;
+    color: #1565c0;
+  }
+
+  .chip-open {
+    background-color: #e8f5e9;
+    border-color: #a5d6a7;
+    color: #2e7d32;
+  }
+
+  .chip-solved {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+  }
+
+  .chip-locked {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+  }
+
+  .chip-school {
+    background-color: #fff3e0;
+    border-color: #ffcc80;
+    color: #e65100;
+  }
+
+  .chip-course {
+    background-color: #f3e5f5;
+    border-color: #ce93d8;
+    color: #7b1fa2;
+  }
+
+  .chip-tag {
+    background-color: #e8eaf6;
+    border-color: #9fa8da;
+    color: #3949ab;
+  }
+
+  .chip .status-help-icon {
+    margin-left: 0.3em;
+    display: inline-flex;
+    align-items: center;
+    cursor: help;
+    opacity: 0.7;
+  }
+
+  .chip .status-help-icon:hover {
+    opacity: 1;
   }
 
   /* AI-Flagged Container (Banner + Actions side by side) */
@@ -877,15 +980,20 @@
     border: 1px solid #d6d8db;
   }
 
-  /* Flag Button */
+  /* Flag/Report Button (Red) */
   .btn-flag {
     background-color: transparent;
-    color: #6c757d;
-    border: 1px solid #6c757d;
+    color: #dc3545;
+    border: 1px solid #dc3545;
   }
 
   .btn-flag:hover {
-    background-color: #6c757d;
+    background-color: #dc3545;
+    color: white;
+  }
+
+  .btn-flag.active {
+    background-color: #dc3545;
     color: white;
   }
 
@@ -938,8 +1046,23 @@
   }
 
   .report-option-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     margin-right: 8px;
-    font-size: 1rem;
+    width: 16px;
+    height: 16px;
+  }
+
+  .report-option-icon svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    color: #6c757d;
+  }
+
+  .report-option:hover .report-option-icon svg {
+    color: #dc3545;
   }
 
   /* Vote Section - Center Large */
