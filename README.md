@@ -25,18 +25,12 @@ CU Blueboard is an **anonymous Q&A platform** exclusively for verified Columbia/
 | **Format** | Feed-based ephemeral chatter | Structured Q&A knowledge base with "Accepted Answers" |
 | **Moderation** | AI + paid employees (generic) | AI pre-screening + Campus Staff who understand context |
 | **Accountability** | Fully anonymous (hateful content lingers) | "Identity Escrow" - anonymous to peers, verified by SSO |
-| **Academic Integrity** | No enforcement | Strict - redaction system + audit logs for violations |
 
 ### Addressing Key Concerns
 
 **Q: How do you prevent hateful content from lingering like on Sidechat?**
 - **AI Pre-screening**: Every post is analyzed before publishing. Toxic content is blocked immediately.
 - **Identity Escrow**: Users are verified via SSO. Severe violations can be traced by administrators, creating accountability.
-
-**Q: How do you prevent homework/quiz answers from being posted?**
-1. **Prevention**: All users agree to Honor Code. Academic dishonesty = ban.
-2. **Moderation**: Staff can instantly redact content (hidden but preserved for evidence).
-3. **Accountability**: Immutable audit logs trace every action back to verified students.
 
 ## Prerequisites
 - Ruby `3.2.2` (see `.ruby-version`)
@@ -532,6 +526,7 @@ CU_Blueboard/
 │   │   ├── answer_revision.rb                    # Stores answer edit history
 │   │   ├── answer_comment.rb                     # Inline comments on answers
 │   │   ├── bookmark.rb                           # Bookmark model for user-post associations
+│   │   ├── post_report.rb                        # Report model for user-initiated content flagging
 │   │   ├── like.rb / thread_identity.rb / audit_log.rb
 │   │   ├── answer_like.rb                        # Answer voting model
 │   │   ├── answer_comment_like.rb                # Answer comment voting model
@@ -696,3 +691,13 @@ Based on community feedback, the following features are being considered for fut
 - **Thread Subscriptions**: Allow users to "watch" threads and receive notifications when new answers or comments are posted.
 - **Rich Text Editor**: Support for markdown formatting, code blocks, and image uploads in posts and answers.
 - **Mobile App**: Native iOS/Android apps for better mobile experience and push notifications.
+
+## Team Contributions
+
+**Seung Jae Hong:** Integrated OpenAI content moderation API; finalized and debugged Google OAuth implementation; configured tester/moderator role permissions; transformed teammates' initial prototypes and ideas into fully functional, polished code with refined UI design (including search/filter interface, duplicate detection panel, bookmark system, post views, moderator dashboard, AI-flagged content panel); debugged and resolved critical functionality issues across features implemented by other team members to ensure proper operation; generated dummy data for meaningful testing and feature validation; handled final Heroku deployment.
+
+**Chih-hsin Chen:** Implemented core post functionality (create, edit, delete) with revision history tracking in Ruby on Rails; built comprehensive search and filtering system supporting full-text search, topic, tag, school, course, timeframe, and status facets; developed "My Threads" feed; created answer-level commenting system with ownership-protected actions; implemented duplicate detection during post creation; added test login functionality for TA/grader evaluation with RSpec and Cucumber coverage; refined school filter logic; built interactive multi-tag search toggle; designed visual status indicators; developed campus resource sidebar and reporting system.
+
+**Yujia Zhai:** Created initial Google login prototype that established the foundation for user authentication; contributed meaningfully to early project direction, feature prioritization, and overall product ideation; assisted with UI design decisions and visual consistency; participated in team meetings and iterative discussions, providing feedback on user experience improvements.
+
+**Mingliang Yu:** Implemented bookmark feature with visual feedback; assisted with initial Heroku deployment setup; participated in team meetings and iterative discussions, providing feedback on user experience improvements.
